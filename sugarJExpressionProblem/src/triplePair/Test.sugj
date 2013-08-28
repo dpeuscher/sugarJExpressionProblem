@@ -1,0 +1,12 @@
+package triplePair;
+
+import triplePair.Sugar;
+
+public class Test {
+  private static (String, Integer, String) p = ("12", 34, "test");
+  public static void main() {
+  	System.out.println(p);
+  }
+} 
+
+

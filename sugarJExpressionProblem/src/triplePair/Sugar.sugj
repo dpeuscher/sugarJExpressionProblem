@@ -1,0 +1,27 @@
+package triplePair;
+
+import org.sugarj.languages.Java;
+import concretesyntax.Java;
+
+import triplePair.TriplePair;
+
+public sugar Sugar {
+  context-free syntax
+    "(" JavaType "," JavaType "," JavaType ")" -> JavaType {cons("TPType")}
+    "(" JavaExpr "," JavaExpr "," JavaExpr ")" -> JavaExpr {cons("TPExpr")}
+  
+  desugarings
+    desugar-triplepair-type
+    desugar-triplepair-expr
+
+  rules
+    desugar-triplepair-type :
+      TPType(t1, t2, t3) -> |[ triplePair.TriplePair<~t1, ~t2, ~t3> ]| 
+
+    desugar-triplepair-expr : 
+      TPExpr(e1, e2, e3) -> |[ triplePair.TriplePair.create(~e1, ~e2, ~e3) ]|
+}
+
+
+
+
