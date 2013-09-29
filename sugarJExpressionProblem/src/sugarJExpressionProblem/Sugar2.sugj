@@ -1,0 +1,22 @@
+package sugarJExpressionProblem;
+
+import org.sugarj.languages.Java;
+import concretesyntax.Java;
+
+public sugar Sugar2 {
+  lexical syntax
+    "exp" -> Keyword
+  lexical restrictions
+  	"exp" -/- [A-Za-z0-9\_\$] 
+  sorts ExpDecHead
+  context-free syntax
+  	( Anno | ClassMod )* "exp" Id TypeParams? Super? Interfaces? -> ClassDecHead {cons("ExpDecHead")}
+  	
+  desugarings
+    desugar-exp
+
+  rules
+    desugar-exp :
+      ExpDecHead(anno,name,param,super,interfaces) -> ClassDecHead(anno,name,param,super,interfaces)
+
+}

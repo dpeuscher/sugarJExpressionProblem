@@ -10,7 +10,7 @@ public sugar Sugar {
     "(" JavaType "," JavaType "," JavaType ")" -> JavaType {cons("TPType")}
     "(" JavaExpr "," JavaExpr "," JavaExpr ")" -> JavaExpr {cons("TPExpr")}
   
-  desugarings
+  desugarings 
     desugar-triplepair-type
     desugar-triplepair-expr
 

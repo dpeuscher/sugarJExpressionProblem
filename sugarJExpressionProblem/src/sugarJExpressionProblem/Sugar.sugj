@@ -1,0 +1,45 @@
+package sugarJExpressionProblem;
+
+import org.sugarj.languages.Java;
+import concretesyntax.Java;
+
+public sugar Sugar {
+  lexical syntax
+    "exp"     -> Keyword
+  lexical restrictions
+  	"exp" -/- [A-Za-z0-9\_\$] 
+  sorts ExpDecHead ExpBody ExpSuper
+  context-free syntax
+    EnumDec -> ExpDec
+    "exp" Id ExpSuper? -> ExpDecHead {cons("ExpDecHead")}
+    ExpDecHead ExpBody -> ExpDec {cons("ExpDec")}
+    "{" ExpBodyDec* "}"-> ExpBody {cons("ExpBody")}
+    "expextends" ClassType -> ExpSuper {cons("ExpSuperDec")}
+
+        
+  lexical syntax
+    "entity"     -> Keyword
+  lexical restrictions
+  	"entity" -/- [A-Za-z0-9\_\$] 
+  sorts ExpDecHead ExpMemberDec
+  context-free syntax
+    ExpEntityDec -> ExpBodyDec
+    ExpMethodDec -> ExpBodyDec
+    ";"          -> ExpBodyDec {cons("Semicolon")}
+
+    
+  lexical syntax
+    "method"     -> Keyword
+  lexical restrictions
+  	"method" -/- [A-Za-z0-9\_\$] 
+  sorts ExpEntityDec ExpMethodSubDec
+  context-free syntax
+    Type "method" Id "{" ExpMethodSubDec* "}" -> ExpMethodDec
+    ( Anno | MethodMod )* TypeParams? Id "(" {FormalParam ","}* ")" Throws? -> ExpMethodSubDec {cons("ExpMethodSubDec")}
+    
+
+  sorts ExpEntityDec
+  context-free syntax
+    "entity" Id ";" -> ExpEntityDec
+
+}
