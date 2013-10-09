@@ -5,12 +5,12 @@ import concretesyntax.Java;
 
 public sugar Sugar2 {
   lexical syntax
-    "exp" -> Keyword
+    "exp" -> JavaKeyword
   lexical restrictions
   	"exp" -/- [A-Za-z0-9\_\$] 
   sorts ExpDecHead
   context-free syntax
-  	( Anno | ClassMod )* "exp" Id TypeParams? Super? Interfaces? -> ClassDecHead {cons("ExpDecHead")}
+  	( JavaAnno | JavaClassMod )* "exp" JavaId JavaTypeParams? JavaSuper? JavaInterfaces? -> JavaClassDecHead {cons("ExpDecHead")}
   	
   desugarings
     desugar-exp

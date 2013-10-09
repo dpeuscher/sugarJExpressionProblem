@@ -2,23 +2,15 @@ package sugarJExpressionProblem;
 
 import sugarJExpressionProblem.Sugar;
 
-exp ExpImpl {
-	entity Lit;
-	entity Add;
-	method IPrint print {
-		public Lit(final int x) {
-			return new IPrint() {
-				public String print() {
-					return new Integer(x).toString();
-				}
-			};
+family ExpImpl {
+	class ExpImpl {
+		public String print (final String e1, final String e2) {
+			return "";
 		}
-		public add(final IPrint e1, final IPrint e2) {
-		return new IPrint() {
-			public String print() {
-				return e1.print() + " + " + e2.print();
-			}
-		};
-		
+	}
+	class Add {
+		public String print (final String e1, final String e2) {
+			return "";
+		}
 	}
 }

@@ -3,5 +3,4 @@ package sugarJExpressionProblem;
 import sugarJExpressionProblem.Sugar2;
 
 exp ExpImpl2 {
-	
-}
+} 
