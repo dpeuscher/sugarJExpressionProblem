@@ -3,12 +3,12 @@ package sugarJExpressionProblem;
 import sugarJExpressionProblem.Sugar;
 
 family ExpImpl {
-	class ExpImpl {
+	virtual class ExpImpl {
 		public String print (final String e1, final String e2) {
 			return "";
 		}
 	}
-	class Add {
+	virtual class Add {
 		public String print (final String e1, final String e2) {
 			return "";
 		}
