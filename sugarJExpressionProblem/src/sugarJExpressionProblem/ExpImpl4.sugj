@@ -1,0 +1,11 @@
+package sugarJExpressionProblem;
+
+import sugarJExpressionProblem.Sugar;
+
+family ExpImpl4 extends ExpImpl3,ExpImpl2 {
+	virtual class Add {
+		public int eval (final int e1, final int e2) {
+			return e1 + e2;
+		}
+	}
+}

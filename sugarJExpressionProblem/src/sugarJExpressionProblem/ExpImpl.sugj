@@ -1,16 +1,16 @@
 package sugarJExpressionProblem;
 
 import sugarJExpressionProblem.Sugar;
+import staticExpressionProblem.IPrint;
 
 family ExpImpl {
-	virtual class ExpImpl {
-		public String print (final String e1, final String e2) {
-			return "";
-		}
-	}
-	virtual class Add {
-		public String print (final String e1, final String e2) {
-			return "";
+	virtual class Int {
+		public IPrint print (final int x) {
+			return new IPrint() {
+				public String print() {
+					return new Integer(x).toString();
+				}
+			};
 		}
 	}
 }

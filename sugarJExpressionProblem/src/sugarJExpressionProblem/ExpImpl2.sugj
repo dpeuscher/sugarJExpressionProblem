@@ -1,6 +1,16 @@
 package sugarJExpressionProblem;
 
-import sugarJExpressionProblem.Sugar2;
+import sugarJExpressionProblem.Sugar;
+import staticExpressionProblem.IPrint;
 
-exp WrongName {
-} 
+family ExpImpl2 extends ExpImpl {
+	virtual class Add {
+		public IPrint print (final IPrint e1, final IPrint e2) {
+			return new IPrint() {
+				public String print() {
+					return e1.print() + " + " + e2.print();
+				}
+			};
+		}
+	}
+}

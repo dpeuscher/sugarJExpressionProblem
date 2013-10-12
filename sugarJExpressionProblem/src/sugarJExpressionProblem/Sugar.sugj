@@ -16,14 +16,13 @@ public sugar Sugar {
     JavaID -> FamilyClassId {cons("FamilyClassId")}
     FamilyDecHead FamilyBody -> FamilyDec {cons("FamilyDec")}
     "{" FamilyBodyDec* "}"-> FamilyBody {cons("FamilyBody")}
-    "extends" FamilyClassId -> FamilySuper {cons("FamilySuperDec")}
+    "extends" FamilyClassId ("," FamilyClassId)* -> FamilySuper {cons("FamilySuperDec")}
     "virtual" JavaClassDec -> FamilyBodyDec {cons("FamilyBodyDec")}
     //JavaClassMemberDec -> JavaClassMemberDec {cons("ClassMemberDec")}
     //JavaClassBodyDec -> JavaClassBodyDec {cons("ClassBodyDec")}
     
   desugarings
     desugar-empty-virtual
-    desugar-virtual-oneclass
     desugar-virtual-class-body
     //desugar-virtual-empty-class
     //desugar-virtual-class
@@ -37,20 +36,8 @@ public sugar Sugar {
       	FamilyDecHead(FamilyClassId(name),super),
       	FamilyBody([])
       ) -> ""
-    desugar-virtual-oneclass :
-      FamilyDec(
-      FamilyDecHead(FamilyClassId(name), super)
-    , FamilyBody(
-        [ FamilyBodyDec(
-            ClassDec(
-              ClassDecHead(anno, Id(classname), param, classsuper, interfaces)
-            , ClassBody(body)
-            )
-          )
-        ]
-      )
-    ) -> ClassDec(ClassDecHead(anno,Id(classname),param,classsuper,interfaces),ClassBody(body))
-    /*desugar-virtual-empty-class :
+    /*
+    desugar-virtual-empty-class :
       FamilyDec(
       	FamilyDecHead(name,super),
       	FamilyBody([FamilyBodyDec(
@@ -95,7 +82,20 @@ public sugar Sugar {
       FamilyDec(
       FamilyDecHead(FamilyClassId(name), super)
     , FamilyBody(
-        stuff
+        [
+        	FamilyBodyDec(
+            ClassDec(
+              ClassDecHead(anno, Id(classname), param, classsuper, interfaces)
+            , ClassBody(body)
+            )
+          )
+        | rest]
       )
-    ) -> ""
+    ) -> [
+    	ClassDec(ClassDecHead(anno,Id(classname),param,classsuper,interfaces),ClassBody(body))
+    	,FamilyDec(
+	      	FamilyDecHead(FamilyClassId(name),super),
+	      	FamilyBody(rest)
+      	)
+      ]
 }
