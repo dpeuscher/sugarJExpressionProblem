@@ -5,11 +5,10 @@ import staticExpressionProblem.*;
 public class UsageCount extends Usage {
 	public static void main(String[] args) {
 		IntFactory factory = new IntFactory();
-		IntPrint printer = new IntPrint();
-		IntCount counter = new IntCount();
+		PrintCountIntAlg combinedAlg = new PrintCountIntAlg();
 		IValue resultValue = visit(factory).eval();
-		String resultString = visit(printer).print();
-		Integer resultCount = visit(counter);
-		System.out.print(resultString + " = " + resultValue.getInt() + " (" + resultCount + " Operatoren)\n");
+		IPrintCount result = visit(combinedAlg);
+		System.out.print(result.print() + " = " + resultValue.getInt() +
+				" (" + result.count() + " Operatoren)\n");
 	}
 }
