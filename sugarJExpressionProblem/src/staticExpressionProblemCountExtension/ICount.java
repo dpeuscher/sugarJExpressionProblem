@@ -1,5 +1,5 @@
 package staticExpressionProblemCountExtension;
 
-public interface IIntCount {
+public interface ICount {
 	public Integer count();
 }

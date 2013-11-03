@@ -2,6 +2,6 @@ package staticExpressionProblemCountExtension;
 
 import staticExpressionProblem.IPrint;
 
-public interface IPrintCount extends IPrint, IIntCount {
+public interface IPrintCount extends IPrint, ICount {
 
 }

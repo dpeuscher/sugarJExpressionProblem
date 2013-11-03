@@ -2,7 +2,7 @@ package staticExpressionProblemCountExtension;
 
 import staticExpressionProblem.*;
 
-public class IntCount implements IIntAlg<IIntCount> {
+public class IntCount implements IIntAlg<ICount> {
 	private static IntCount _instance;
 	public static IntCount getInstance() {
 		if (null == _instance)
@@ -10,8 +10,8 @@ public class IntCount implements IIntAlg<IIntCount> {
 		return _instance;
 	}
 	protected IntCount() {}
-	public IIntCount lit(final int x) {
-		return new IIntCount() {
+	public ICount lit(final int x) {
+		return new ICount() {
 			
 			public Integer count() {
 				return new Integer(1);
@@ -19,8 +19,8 @@ public class IntCount implements IIntAlg<IIntCount> {
 		};
 	}
 
-	public IIntCount add(final IIntCount e1, final IIntCount e2) {
-		return new IIntCount() {
+	public ICount add(final ICount e1, final ICount e2) {
+		return new ICount() {
 			
 			public Integer count() {
 				return new Integer(e1.count() + e2.count());

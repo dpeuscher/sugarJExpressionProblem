@@ -8,7 +8,7 @@ import staticExpressionProblemSubExtension.UsageSub;
 public class UsageSubCount extends UsageSub {
 	public static void main(String[] args) {
 		IntFactorySub factory = new IntFactorySub();
-		PrintCountSubIntAlg combinedAlg = new PrintCountSubIntAlg();
+		IntPrintCountSub combinedAlg = new IntPrintCountSub();
 		IValue resultValue = visit(factory).eval();
 		IPrintCount result = visit(combinedAlg);
 		System.out.print(result.print() + " = " + resultValue.getInt() +

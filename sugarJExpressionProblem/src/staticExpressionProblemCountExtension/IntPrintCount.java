@@ -3,7 +3,7 @@ package staticExpressionProblemCountExtension;
 import staticExpressionProblem.IIntAlg;
 import staticExpressionProblem.IntPrint;
 
-public class PrintCountIntAlg implements IIntAlg<IPrintCount> {
+public class IntPrintCount implements IIntAlg<IPrintCount> {
 	
 	public IPrintCount lit(final int x) {
 		return new IPrintCount() {
