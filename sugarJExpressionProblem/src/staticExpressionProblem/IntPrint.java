@@ -1,6 +1,13 @@
 package staticExpressionProblem;
 
 public class IntPrint implements IIntAlg<IPrint> {
+	private static IntPrint _instance;
+	public static IntPrint getInstance() {
+		if (null == _instance)
+			_instance = new IntPrint();
+		return _instance;
+	}
+	protected IntPrint() {}
 	public IPrint lit(final int x) {
 		return new IPrint() {
 			public String print() {
