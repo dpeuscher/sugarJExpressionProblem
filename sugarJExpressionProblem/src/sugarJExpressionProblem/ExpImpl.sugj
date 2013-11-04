@@ -5,12 +5,8 @@ import staticExpressionProblem.IPrint;
 
 family ExpImpl {
 	virtual class Int {
-		public IPrint print (final int x) {
-			return new IPrint() {
-				public String print() {
-					return new Integer(x).toString();
-				}
-			};
+		public String print (final int x) {
+			return new Integer(x).toString();
 		}
 	}
 }

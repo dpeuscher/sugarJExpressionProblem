@@ -4,8 +4,8 @@ import sugarJExpressionProblem.Sugar;
 
 family ExpImpl3 extends ExpImpl {
 	virtual class Int {
-		public int eval (final int x) {
-			return x;
+		public Integer eval (final int x) {
+			return new Integer(x);
 		}
 	}
 }
