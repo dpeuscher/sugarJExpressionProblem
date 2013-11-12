@@ -10,13 +10,16 @@ public class IntPrintCountSub extends IntPrintCount
 
 	public IPrintCount sub(final IPrintCount e1, final IPrintCount e2) {
 		return new IPrintCount() {
-			
+			protected IntPrintSub _printSubAlg;
+
 			public Integer count() {
-				return IntCountSub.getInstance().sub(e1, e2).count();
+				return new Integer(e1.count() + e2.count());
 			}
 			
 			public String print() {
-				return IntPrintSub.getInstance().sub(e1, e2).print();
+				if (null == _printSubAlg)
+					_printSubAlg = new IntPrintSub();
+				return _printSubAlg.add(e1,e2).print();
 			}
 		};
 	}
