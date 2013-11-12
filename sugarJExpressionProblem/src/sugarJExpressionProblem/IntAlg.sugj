@@ -1,0 +1,11 @@
+package sugarJExpressionProblem;
+
+import sugarJExpressionProblem.Sugar;
+
+family IntAlg {
+	virtual class Lit (Integer x) {
+		public String print (String prefix) {
+			return prefix + new Integer(x).toString();
+		}
+	}
+}

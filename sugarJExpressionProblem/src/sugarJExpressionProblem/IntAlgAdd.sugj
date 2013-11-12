@@ -1,0 +1,12 @@
+package sugarJExpressionProblem;
+
+import sugarJExpressionProblem.Sugar;
+import staticExpressionProblem.IPrint;
+
+family IntAlgAdd extends IntAlg {
+	virtual class Add (IntAlgAdd e1,IntAlgAdd e2) {
+		public String print (String prefix) {
+			return prefix + e1.print() + " + " + e2.print();
+		}
+	}
+}

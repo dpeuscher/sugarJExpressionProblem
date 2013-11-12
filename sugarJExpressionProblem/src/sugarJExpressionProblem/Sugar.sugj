@@ -14,12 +14,14 @@ public sugar Sugar {
     FamilyDec -> JavaTypeDec
     "family" FamilyClassId FamilySuper? -> FamilyDecHead {cons("FamilyDecHead")}
     JavaID -> FamilyClassId {cons("FamilyClassId")}
+    JavaID -> FamilyVirtualClassId {cons("FamilyVirtualClassId")}
     FamilyDecHead FamilyBody -> FamilyDec {cons("FamilyDec")}
     "{" FamilyBodyDec* "}"-> FamilyBody {cons("FamilyBody")}
     "extends" FamilyClassId ("," FamilyClassId)* -> FamilySuper {cons("FamilySuperDec")}
-    "virtual" JavaClassDec -> FamilyBodyDec {cons("FamilyBodyDec")}
-    //JavaClassMemberDec -> JavaClassMemberDec {cons("ClassMemberDec")}
-    //JavaClassBodyDec -> JavaClassBodyDec {cons("ClassBodyDec")}
+    VirtualClassDec -> FamilyBodyDec {cons("FamilyBodyDec")}
+    VirtualClassDecHead JavaClassBody -> VirtualClassDec {cons("VirtualClassDec")}
+    "virtual" "class" FamilyVirtualClassId "(" {VirtualFormalParam ","}* ")" -> VirtualClassDecHead {cons("VirtualClassDecHead")}
+    JavaType JavaVarDecId -> VirtualFormalParam {cons("VirtualFormalParam")} // always have to be final
     
   desugarings
     desugar-empty-virtual
@@ -84,15 +86,15 @@ public sugar Sugar {
     , FamilyBody(
         [
         	FamilyBodyDec(
-            ClassDec(
-              ClassDecHead(anno, Id(classname), param, classsuper, interfaces)
+            VirtualClassDec(
+              VirtualClassDecHead(FamilyVirtualClassId(classname),signatur)
             , ClassBody(body)
             )
           )
         | rest]
       )
     ) -> [
-    	ClassDec(ClassDecHead(anno,Id(classname),param,classsuper,interfaces),ClassBody(body))
+    	ClassDec(ClassDecHead("",Id(classname),"","",""),ClassBody(body))
     	,FamilyDec(
 	      	FamilyDecHead(FamilyClassId(name),super),
 	      	FamilyBody(rest)
