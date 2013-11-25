@@ -1,0 +1,6 @@
+package sugarJExpressionProblem;
+
+import sugarJExpressionProblem.Sugar;
+ 
+class test <test> { 
+}
