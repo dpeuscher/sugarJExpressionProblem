@@ -9,4 +9,3 @@ family IntAlgCount extends IntAlg {
 		}
 	}
 }
- 

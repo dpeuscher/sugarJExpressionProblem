@@ -69,23 +69,23 @@ public sugar Sugar {
       ) -> ClassDec(ClassDecHead(["public"],Id("IntAlg2"),None,None,None),ClassBody(<desugar-body>body))
       */
     virtual-params-to-interface:
-    	([],familyname) -> []
+    	([],familyname,replace,annot) -> []
     virtual-params-to-interface:
-    	([VirtualFormalParam(type,Id(varname)) | rest],familyname) -> 
+    	([VirtualFormalParam(type,Id(varname)) | rest],familyname,replace,annot) -> 
     		[Param(
-             				[]
+             				annot
            					, ClassOrInterfaceType(TypeName(Id(type)), None())
            					, Id(varname)
-           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname)]
+           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname,replace,annot)]
     virtual-params-to-interface-replace:
-    	([],familyname) -> []
+    	([],familyname,replace,annot) -> []
     virtual-params-to-interface-replace:
-    	([VirtualFormalParam(familyname,Id(varname)) | rest],familyname) -> 
+    	([VirtualFormalParam(familyname,Id(varname)) | rest],familyname,replace,annot) -> 
     		[Param( 
-             				[]
-           					, ClassOrInterfaceType(TypeName(Id("A")), None())
+             				annot
+           					, ClassOrInterfaceType(TypeName(Id(replace)), None())
            					, Id(varname)
-           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname)]
+           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname,replace,annot)]
     virtual-classes-to-interface:
     	([],familyname) -> []
     virtual-classes-to-interface:
@@ -100,7 +100,7 @@ public sugar Sugar {
         				, None()
         				, ClassOrInterfaceType(TypeName(Id("A")), None())
         				, Id(classname)
-        				, <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname)
+        				, <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,"A",[])
         			, None()
         			) | <virtual-classes-to-interface> (rest,familyname)]
     family-super:
@@ -188,13 +188,74 @@ public sugar Sugar {
     	InterfaceDec(
      			InterfaceDecHead(
         			[Public()]
-      				, Id(<conc-strings>(familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))
+      				, Id(<conc-strings>("I",familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))
      				, None()
      				, <family-super> super
       			)
     			,
     		  	<function-search-methods> virtualClasses
     		)
+
+    function-search-typemethods:
+    	(familyname,super,[FamilyBodyDec(
+	            VirtualClassDec(
+	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+	            , ClassBody(body)
+	            )
+	          ) | rest],newClassName,interfaceName) -> [ MethodDec(
+            MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
+            , Id(classname)
+            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+            , None()
+            )
+          , Block(
+              [ 
+              	Return(
+                  Some(
+                    NewInstance(
+                      None()
+                    , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
+                    , []
+                    , Some(
+                        ClassBody(
+                          body
+                        )
+                      )
+                    )
+                  )
+                )
+              ]
+            )
+          )
+        ]
+    desugar-family-class:
+		(familyname,super,virtualClasses) ->
+		ClassDec(
+      ClassDecHead(
+        [Public()]
+      , Id(<conc-strings>(familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))
+      , None()
+      , None()
+      , Some(
+          ImplementsDec(
+            [ InterfaceType(
+                TypeName(Id(<conc-strings>("I",familyname))) 
+              , Some(TypeArgs([ClassOrInterfaceType(TypeName(Id(<conc-strings>("I",familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))), None())]))
+              )
+            ]
+          )
+        )
+      )
+    , ClassBody(
+        <function-search-typemethods> (familyname,super,virtualClasses,
+        	<conc-strings>(familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))),
+        	<conc-strings>("I",familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses)))
+        )
+      )
+    )
   	desugar-family:
     	FamilyDec(
       		FamilyDecHead(FamilyClassId(familyname), super)
@@ -203,6 +264,7 @@ public sugar Sugar {
 	      )
     	) -> [
     		<desugar-family-type-interface> (familyname,super,virtualClasses),
-    		<desugar-family-function-interface> (familyname,super,virtualClasses)
+    		<desugar-family-function-interface> (familyname,super,virtualClasses),
+    		<desugar-family-class> (familyname,super,virtualClasses)
     	]
 }
