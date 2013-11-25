@@ -2,11 +2,11 @@ package expressionProblemTargetTypeExtension;
 
 import expressionProblemTargetMain.*;
 
-public class IntPrintSub extends IntPrint implements IIntAlgSub <IPrint> {
-	public IPrint sub(final IPrint e1, final IPrint e2) {
-		return new IPrint() {
-			public String print() {
-				return e1.print() + " - " + e2.print();
+public class IntAlgSubPrint extends IntAlgPrint implements IIntAlgSub <IIntAlgPrint> {
+	public IIntAlgPrint sub(final IIntAlgPrint e1, final IIntAlgPrint e2) {
+		return new IIntAlgPrint() {
+			public String print(String prefix) {
+				return prefix + e1.print("") + " - " + e2.print("");
 			}
 		};
 	}

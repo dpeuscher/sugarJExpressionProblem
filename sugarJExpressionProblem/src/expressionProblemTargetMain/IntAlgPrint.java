@@ -1,17 +1,10 @@
 package expressionProblemTargetMain;
 
-public class IntPrint implements IIntAlg<IPrint> {
-	public IPrint lit(final int x) {
-		return new IPrint() {
-			public String print() {
-				return new Integer(x).toString();
-			}
-		};
-	}
-	public IPrint add(final IPrint e1, final IPrint e2) {
-		return new IPrint() {
-			public String print() {
-				return e1.print() + " + " + e2.print();
+public class IntAlgPrint implements IIntAlg<IIntAlgPrint> {
+	public IIntAlgPrint lit(final Integer x) {
+		return new IIntAlgPrint() {
+			public String print(String prefix) {
+				return prefix + new Integer(x).toString();
 			}
 		};
 	}

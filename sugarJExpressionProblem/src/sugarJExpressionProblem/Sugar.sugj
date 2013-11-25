@@ -4,6 +4,7 @@ import org.sugarj.languages.Java;
 import concretesyntax.Java;
 
 public sugar Sugar {
+
   lexical syntax
     "virtual" -> JavaKeyword
     "family" -> JavaKeyword
@@ -17,87 +18,191 @@ public sugar Sugar {
     JavaID -> FamilyVirtualClassId {cons("FamilyVirtualClassId")}
     FamilyDecHead FamilyBody -> FamilyDec {cons("FamilyDec")}
     "{" FamilyBodyDec* "}"-> FamilyBody {cons("FamilyBody")}
-    "extends" FamilyClassId ("," FamilyClassId)* -> FamilySuper {cons("FamilySuperDec")}
+    "extends" { FamilyClassId ","}+ -> FamilySuper {cons("FamilySuper")}
     VirtualClassDec -> FamilyBodyDec {cons("FamilyBodyDec")}
     VirtualClassDecHead JavaClassBody -> VirtualClassDec {cons("VirtualClassDec")}
     "virtual" "class" FamilyVirtualClassId "(" {VirtualFormalParam ","}* ")" -> VirtualClassDecHead {cons("VirtualClassDecHead")}
-    JavaType JavaVarDecId -> VirtualFormalParam {cons("VirtualFormalParam")} // always have to be final
+    JavaID JavaVarDecId -> VirtualFormalParam {cons("VirtualFormalParam")} // always have to be final
     
   desugarings
-    desugar-empty-virtual
-    desugar-virtual-class-body
-    //desugar-virtual-empty-class
-    //desugar-virtual-class
+    desugar-family
+    testIt
+    testIt2
   
   //strategies
-    //direction() = desugar-empty-virtual <+ desugar-virtual-oneclass <+ desugar-virtual-empty-class <+ desugar-virtual-class
+    //direction = desugar-empty-super <+ desugar-virtual-class-body <+ id
 
-  rules
-  	desugar-empty-virtual :
-      FamilyDec(
-      	FamilyDecHead(FamilyClassId(name),super),
-      	FamilyBody([])
-      ) -> ""
-    /*
-    desugar-virtual-empty-class :
-      FamilyDec(
-      	FamilyDecHead(name,super),
-      	FamilyBody([FamilyBodyDec(
-      		ClassDec(
-      			ClassDecHead(anno,classname,param,classsuper,interfaces),
-      			ClassBody([])
-      		)
-      	) | rest])
-      ) -> [ClassDec(ClassDecHead(anno,name,param,classsuper,interfaces),ClassBody([])),FamilyDec(
-      	FamilyDecHead(name,super),
-      	FamilyBody(rest)
-      )]
-    desugar-virtual-class :
-      FamilyDec(
-      	FamilyDecHead(name,super),
-      	FamilyBody([FamilyBodyDec(
-      		ClassDec(
-      			ClassDecHead(anno,classname,param,classsuper,interfaces),
-      			ClassBody([ClassBodyDec(ClassMemberDec(
-      				MethodDec(
-      					MethodDecHead(methodanno,methodtypeparams,methodresulttype,methodname,formalparam,throws),
-      					body
-      				)
-      			)) | rest2])
-      		)
-      	) | rest])
-      ) -> [ClassDec(ClassDecHead(anno,classname,param,classsuper,interfaces),ClassBody([ClassBodyDec(ClassMemberDec(
-      				MethodDec(
-      					MethodDecHead(methodanno,methodtypeparams,methodresulttype,methodname,formalparam,throws),
-      					body
-      				)
-      			))])),FamilyDec(
-      	FamilyDecHead(name,super),
-      	FamilyBody([FamilyBodyDec(
-      		ClassDec(
-      			ClassDecHead(anno,classname,param,super,interfaces),
-      			ClassBody([rest2])
-      		)
-      	) | rest])
-      )]*/
-    desugar-virtual-class-body :
-      FamilyDec(
-      FamilyDecHead(FamilyClassId(name), super)
-    , FamilyBody(
-        [
-        	FamilyBodyDec(
-            VirtualClassDec(
-              VirtualClassDecHead(FamilyVirtualClassId(classname),signatur)
-            , ClassBody(body)
-            )
-          )
-        | rest]
+  rules  
+    testIt:
+  	ClassDec(
+      ClassDecHead(
+        []
+      , Id(classname)
+      , Some(TypeParams([TypeParam(Id(classname), None())]))
+      , None()
+      , None()
       )
-    ) -> [
-    	ClassDec(ClassDecHead("",Id(classname),"","",""),ClassBody(body))
-    	,FamilyDec(
-	      	FamilyDecHead(FamilyClassId(name),super),
-	      	FamilyBody(rest)
-      	)
-      ]
+    , ClassBody([])
+    ) -> ClassDec(
+      ClassDecHead(
+        []
+      , Id(classname)
+      , Some(TypeParams([TypeParam(Id("passed"), None())]))
+      , None()
+      , None()
+      )
+    , ClassBody([])
+    )
+    testIt2:
+    	Plus(x,x) -> Mul(Lit(Deci("2")), x)
+  /*
+    desugar-element:
+    	something -> None()
+    desugar-body :
+    	[] -> []
+    desugar-body :
+    	[firstElement | rest] -> [<desugar-element>firstElement | <desugar-body> rest]
+  	exprtestrule :
+  	  FamilyDec(
+      	FamilyDecHead(FamilyClassId(name),super),
+      	FamilyBody(body)
+      ) -> ClassDec(ClassDecHead(["public"],Id("IntAlg2"),None,None,None),ClassBody(<desugar-body>body))
+      */
+    virtual-params-to-interface:
+    	([],familyname) -> []
+    virtual-params-to-interface:
+    	([VirtualFormalParam(type,Id(varname)) | rest],familyname) -> 
+    		[Param(
+             				[]
+           					, ClassOrInterfaceType(TypeName(Id(type)), None())
+           					, Id(varname)
+           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname)]
+    virtual-params-to-interface-replace:
+    	([],familyname) -> []
+    virtual-params-to-interface-replace:
+    	([VirtualFormalParam(familyname,Id(varname)) | rest],familyname) -> 
+    		[Param( 
+             				[]
+           					, ClassOrInterfaceType(TypeName(Id("A")), None())
+           					, Id(varname)
+           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname)]
+    virtual-classes-to-interface:
+    	([],familyname) -> []
+    virtual-classes-to-interface:
+    	([FamilyBodyDec(
+	            VirtualClassDec(
+	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+	            , ClassBody(body)
+	            )
+	          ) | rest],familyname) ->
+	          [AbstractMethodDec(
+          				[Public()]
+        				, None()
+        				, ClassOrInterfaceType(TypeName(Id("A")), None())
+        				, Id(classname)
+        				, <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname)
+        			, None()
+        			) | <virtual-classes-to-interface> (rest,familyname)]
+    family-super:
+    	[] -> []
+    family-super:
+    	[FamilyClassId(interfaceName) | rest] ->
+    	[InterfaceType(TypeName(Id(interfaceName)), Some(TypeArgs([ClassOrInterfaceType(TypeName(Id("A")), None())]))) | <family-super> rest]
+    family-super:
+    	Some(FamilySuper([FamilyClassId(interfaceName) | rest])) ->
+    	Some(ExtendsInterfaces([InterfaceType(TypeName(Id(interfaceName)), Some(TypeArgs([ClassOrInterfaceType(TypeName(Id("A")), None())]))) | <family-super> rest]))
+   	family-super:
+   		None() -> None()
+    desugar-family-type-interface:
+    	(familyname,super,virtualClasses) ->
+    	InterfaceDec(
+     			InterfaceDecHead(
+        			[Public()]
+      				, Id(<conc-strings>("I",familyname))
+     				, Some(TypeParams([TypeParam(Id("A"), None())]))
+     				, <family-super> super
+      			)
+    			,<virtual-classes-to-interface> (virtualClasses,familyname)
+    		)
+    function-search-methodnames-bodyparts:
+    	[] -> []
+    function-search-methodnames-bodyparts:
+    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methodnames-bodyparts> rest
+    function-search-methodnames-bodyparts:
+    	[MethodDec(
+            MethodDecHead(
+              annot
+            , typeParams
+            , result
+            , Id(methodName)
+            , params
+            , throws
+            )
+          , body
+          ) | rest] -> <union>([methodName],<function-search-methodnames-bodyparts> rest)
+    function-search-methodnames:
+    	[] -> []
+    function-search-methodnames:
+    	[FamilyBodyDec(
+	            VirtualClassDec(
+	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+	            , ClassBody(body)
+	            )
+	          ) | rest] -> <union>(<function-search-methodnames-bodyparts> body,<function-search-methodnames> rest)
+	function-search-methods-bodyparts:
+    	[] -> []
+    function-search-methods-bodyparts:
+    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methods-bodyparts> rest
+    function-search-methods-bodyparts:
+    	[MethodDec(
+            MethodDecHead(
+              annot
+            , typeParams
+            , result
+            , Id(methodName)
+            , params
+            , throws
+            )
+          , body
+          ) | rest] -> <concat>[[
+          	AbstractMethodDec(
+          annot
+        , typeParams
+        , result
+        , Id(methodName)
+        , params
+        , throws
+        ) 	
+          ],<function-search-methods-bodyparts> rest]
+    function-search-methods:
+    	[] -> []
+    function-search-methods:
+    	[FamilyBodyDec(
+	            VirtualClassDec(
+	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+	            , ClassBody(body)
+	            )
+	          ) | rest] -> <concat> [<function-search-methods-bodyparts> body,<function-search-methods> rest]
+    desugar-family-function-interface:
+    	(familyname,super,virtualClasses) ->
+    	InterfaceDec(
+     			InterfaceDecHead(
+        			[Public()]
+      				, Id(<conc-strings>(familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))
+     				, None()
+     				, <family-super> super
+      			)
+    			,
+    		  	<function-search-methods> virtualClasses
+    		)
+  	desugar-family:
+    	FamilyDec(
+      		FamilyDecHead(FamilyClassId(familyname), super)
+    	,FamilyBody(
+	        virtualClasses
+	      )
+    	) -> [
+    		<desugar-family-type-interface> (familyname,super,virtualClasses),
+    		<desugar-family-function-interface> (familyname,super,virtualClasses)
+    	]
 }

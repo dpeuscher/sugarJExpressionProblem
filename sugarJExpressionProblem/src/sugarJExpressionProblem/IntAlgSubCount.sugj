@@ -1,10 +1,10 @@
 package sugarJExpressionProblem;
 
-import sugarJExpressionProblem.Sugar;
+import sugarJExpressionProblem.Sugar; 
 
-family IntAlgAddCount extends IntAlgAdd,IntAlgCount {
-	virtual class Add (IntAlgAddCount e1,IntAlgAddCount e2) {
-		public Integer count (Integer add) { /* int durch Tree ersetzen*/
+family IntAlgSubCount extends IntAlgSub,IntAlgCount {
+	virtual class Sub (IntAlgSubCount e1,IntAlgSubCount e2) {
+		public Integer count (Integer add) {
 			return new Integer(add + e1.count() + e2.count());
 		}
 	}

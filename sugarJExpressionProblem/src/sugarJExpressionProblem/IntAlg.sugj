@@ -1,9 +1,9 @@
 package sugarJExpressionProblem;
 
 import sugarJExpressionProblem.Sugar;
-
+ 
 family IntAlg {
-	virtual class Lit (Integer x) {
+	virtual class Lit (Integer x,String test, Boolean abc) {
 		public String print (String prefix) {
 			return prefix + new Integer(x).toString();
 		}

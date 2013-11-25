@@ -2,6 +2,6 @@ package expressionProblemTargetFunctionExtension;
 
 import expressionProblemTargetMain.*;
 
-public interface IPrintCount extends IPrint, ICount {
-
+public interface IIntAlgPrintCount extends IIntAlgPrint {
+	public Integer count();
 }
