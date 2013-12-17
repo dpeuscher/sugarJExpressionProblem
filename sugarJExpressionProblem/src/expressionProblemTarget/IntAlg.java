@@ -19,7 +19,7 @@ public class IntAlg {
 	protected static Generator _generator;
 	public static Generator Generator() {
 		if (_generator == null)
-			_generator = new Generator();
+			_generator = new IntAlg().new Generator();
 		return _generator;
 	}
 }

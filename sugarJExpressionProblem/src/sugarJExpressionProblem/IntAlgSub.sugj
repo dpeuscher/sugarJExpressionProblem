@@ -5,7 +5,7 @@ import sugarJExpressionProblem.Sugar;
 family IntAlgSub extends IntAlg {
 	virtual class Sub (IntAlgSub e1,IntAlgSub e2) {
 		public String print (String prefix) {
-			return prefix + e1.print() + " - " + e2.print();
+			return prefix + e1.print(prefix) + " - " + e2.print(prefix);
 		}
 	}
 }

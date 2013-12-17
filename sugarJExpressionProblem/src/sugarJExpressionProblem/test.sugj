@@ -2,5 +2,10 @@ package sugarJExpressionProblem;
 
 import sugarJExpressionProblem.Sugar;
  
-class test <test> { 
+class test <test> {
+	protected String a = "test";
+	public String testMethod() {
+		String b = "test";
+		return b;
+	}
 }

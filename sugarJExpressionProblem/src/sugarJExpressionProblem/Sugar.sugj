@@ -26,245 +26,1003 @@ public sugar Sugar {
     
   desugarings
     desugar-family
-    testIt
-    testIt2
-  
+
   //strategies
     //direction = desugar-empty-super <+ desugar-virtual-class-body <+ id
 
-  rules  
-    testIt:
-  	ClassDec(
-      ClassDecHead(
-        []
-      , Id(classname)
-      , Some(TypeParams([TypeParam(Id(classname), None())]))
-      , None()
-      , None()
-      )
-    , ClassBody([])
-    ) -> ClassDec(
-      ClassDecHead(
-        []
-      , Id(classname)
-      , Some(TypeParams([TypeParam(Id("passed"), None())]))
-      , None()
-      , None()
-      )
-    , ClassBody([])
-    )
-    testIt2:
-    	Plus(x,x) -> Mul(Lit(Deci("2")), x)
-  /*
-    desugar-element:
-    	something -> None()
-    desugar-body :
-    	[] -> []
-    desugar-body :
-    	[firstElement | rest] -> [<desugar-element>firstElement | <desugar-body> rest]
-  	exprtestrule :
-  	  FamilyDec(
-      	FamilyDecHead(FamilyClassId(name),super),
-      	FamilyBody(body)
-      ) -> ClassDec(ClassDecHead(["public"],Id("IntAlg2"),None,None,None),ClassBody(<desugar-body>body))
-      */
-    virtual-params-to-interface:
-    	([],familyname,replace,annot) -> []
-    virtual-params-to-interface:
-    	([VirtualFormalParam(type,Id(varname)) | rest],familyname,replace,annot) -> 
-    		[Param(
-             				annot
-           					, ClassOrInterfaceType(TypeName(Id(type)), None())
-           					, Id(varname)
-           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname,replace,annot)]
-    virtual-params-to-interface-replace:
-    	([],familyname,replace,annot) -> []
-    virtual-params-to-interface-replace:
-    	([VirtualFormalParam(familyname,Id(varname)) | rest],familyname,replace,annot) -> 
-    		[Param( 
-             				annot
-           					, ClassOrInterfaceType(TypeName(Id(replace)), None())
-           					, Id(varname)
-           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname,replace,annot)]
-    virtual-classes-to-interface:
-    	([],familyname) -> []
-    virtual-classes-to-interface:
-    	([FamilyBodyDec(
-	            VirtualClassDec(
-	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
-	            , ClassBody(body)
-	            )
-	          ) | rest],familyname) ->
-	          [AbstractMethodDec(
-          				[Public()]
-        				, None()
-        				, ClassOrInterfaceType(TypeName(Id("A")), None())
-        				, Id(classname)
-        				, <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,"A",[])
-        			, None()
-        			) | <virtual-classes-to-interface> (rest,familyname)]
-    family-super:
-    	[] -> []
-    family-super:
-    	[FamilyClassId(interfaceName) | rest] ->
-    	[InterfaceType(TypeName(Id(interfaceName)), Some(TypeArgs([ClassOrInterfaceType(TypeName(Id("A")), None())]))) | <family-super> rest]
-    family-super:
-    	Some(FamilySuper([FamilyClassId(interfaceName) | rest])) ->
-    	Some(ExtendsInterfaces([InterfaceType(TypeName(Id(interfaceName)), Some(TypeArgs([ClassOrInterfaceType(TypeName(Id("A")), None())]))) | <family-super> rest]))
-   	family-super:
-   		None() -> None()
-    desugar-family-type-interface:
-    	(familyname,super,virtualClasses) ->
-    	InterfaceDec(
-     			InterfaceDecHead(
-        			[Public()]
-      				, Id(<conc-strings>("I",familyname))
-     				, Some(TypeParams([TypeParam(Id("A"), None())]))
-     				, <family-super> super
-      			)
-    			,<virtual-classes-to-interface> (virtualClasses,familyname)
-    		)
-    function-search-methodnames-bodyparts:
-    	[] -> []
-    function-search-methodnames-bodyparts:
-    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methodnames-bodyparts> rest
-    function-search-methodnames-bodyparts:
-    	[MethodDec(
-            MethodDecHead(
-              annot
-            , typeParams
-            , result
-            , Id(methodName)
-            , params
-            , throws
-            )
-          , body
-          ) | rest] -> <union>([methodName],<function-search-methodnames-bodyparts> rest)
-    function-search-methodnames:
-    	[] -> []
-    function-search-methodnames:
-    	[FamilyBodyDec(
-	            VirtualClassDec(
-	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
-	            , ClassBody(body)
-	            )
-	          ) | rest] -> <union>(<function-search-methodnames-bodyparts> body,<function-search-methodnames> rest)
-	function-search-methods-bodyparts:
-    	[] -> []
-    function-search-methods-bodyparts:
-    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methods-bodyparts> rest
-    function-search-methods-bodyparts:
-    	[MethodDec(
-            MethodDecHead(
-              annot
-            , typeParams
-            , result
-            , Id(methodName)
-            , params
-            , throws
-            )
-          , body
-          ) | rest] -> <concat>[[
-          	AbstractMethodDec(
-          annot
-        , typeParams
-        , result
-        , Id(methodName)
-        , params
-        , throws
-        ) 	
-          ],<function-search-methods-bodyparts> rest]
-    function-search-methods:
-    	[] -> []
-    function-search-methods:
-    	[FamilyBodyDec(
-	            VirtualClassDec(
-	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
-	            , ClassBody(body)
-	            )
-	          ) | rest] -> <concat> [<function-search-methods-bodyparts> body,<function-search-methods> rest]
-    desugar-family-function-interface:
-    	(familyname,super,virtualClasses) ->
-    	InterfaceDec(
-     			InterfaceDecHead(
-        			[Public()]
-      				, Id(<conc-strings>("I",familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))
-     				, None()
-     				, <family-super> super
-      			)
-    			,
-    		  	<function-search-methods> virtualClasses
-    		)
+  rules
+  	// General Strategies:
+  	
+  		getFieldNumber:
+  			((f0,f1,f2),number) -> f0 where <eq>(number,0)
+  		getFieldNumber:
+  			((f0,f1,f2),number) -> f1 where <eq>(number,1)
+  		getFieldNumber:
+  			((f0,f1,f2),number) -> f2 where <eq>(number,2)
+  		getFieldNumber:
+  			((f0,f1),number) -> f0 where <eq>(number,0)
+  		getFieldNumber:
+  			((f0,f1),number) -> f1 where <eq>(number,1)
+	  	getFieldNumber:
+	    	([field | rest],number) -> <getFieldNumber> (rest,<subti>(number,1)) where <gt>(number,0)
+	    getFieldNumber:
+	    	([field | rest],number) -> field where <eq>(number,0)
+	    	
+	    	
+		remove-depth:
+  			(f0) -> f0
+  	    remove:
+	    	([],search) -> []
+	    remove:
+	    	([element | rest],search) -> [<remove>(rest,search)] where <structurally-equal> (search,element)
+	    remove:
+	    	([element | rest],search) -> [element | <remove>(rest,search)] where <not(structurally-equal)> (search,element)
+	    	
+	    	
+  	// Params:
+  	
+  	
+		// Signature:
+		
+		
+		    params-to-signature:
+		    	([],familyname,replace) -> []
+		    params-to-signature:
+		    	([Param([],ClassOrInterfaceType(TypeName(Id(type)), None())
+                 , Id(varname)) | rest],search,replace) -> 
+		    		[type | <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
+		    		
+		    		
+		    params-to-signature-replace:
+		    	([],search,replace) -> []
+		    params-to-signature-replace:
+		    	([Param([],ClassOrInterfaceType(TypeName(Id(type)), None())
+                 , Id(varname)) | rest],search,replace) -> 
+		    		[replace | <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
+		           				where <structurally-equal> (type,search)
+		           				
+		           				
+		    paramlist-to-params:
+		    	[] -> []
+		    paramlist-to-params:
+		    	([],nr) -> []
+		    paramlist-to-params:
+		    	([param | rest],nr) ->
+		    	[Param([],ClassOrInterfaceType(TypeName(Id(param)),None())
+		    		,Id(<conc-strings>("param",<int-to-string>nr))) | <paramlist-to-params> (rest,<inc>nr)]
+		    paramlist-to-params:
+		    	[param | rest] -> <paramlist-to-params> ([param | rest],1)
+		    	
+		    
+		    paramlist-to-constructor:
+		    	[] -> []
+		    paramlist-to-constructor:
+		    	([],nr) -> []
+		    paramlist-to-constructor:
+		    	([param | rest],nr) ->
+		    	[ExprName(Id(<conc-strings>("param",<int-to-string>nr))) | <paramlist-to-constructor> (rest,<inc>nr)]
+		    paramlist-to-constructor:
+		    	[param | rest] -> <paramlist-to-constructor> ([param | rest],1)
+		   		           				
 
-    function-search-typemethods:
-    	(familyname,super,[FamilyBodyDec(
-	            VirtualClassDec(
-	              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
-	            , ClassBody(body)
+  	// Virtual Params:
+  	
+  	
+  		virtual-param-get-type:
+  			VirtualFormalParam(type,Id(varname)) -> type
+  		virtual-param-get-varname:
+  			VirtualFormalParam(type,Id(varname)) -> varname
+  			
+  	
+		// Signature:
+			
+		
+		    virtual-params-to-signature:
+		    	([],familyname,replace,annot) -> []
+		    virtual-params-to-signature:
+		    	([param | rest],familyname,replace,annot) -> 
+		    		[<virtual-param-get-type>param | <virtual-params-to-signature-replace <+ virtual-params-to-signature> (rest,familyname,replace,annot)]
+		    		
+		    		
+		    virtual-params-to-signature-replace:
+		    	([],familyname,replace,annot) -> []
+		    virtual-params-to-signature-replace:
+		    	([param | rest],familyname,replace,annot) -> 
+		    		[replace | <virtual-params-to-signature-replace <+ virtual-params-to-signature> (rest,familyname,replace,annot)]
+		           				where <structurally-equal> (<virtual-param-get-type>param,familyname)
+		           				
+		           				
+	    // Interface
+	    
+	    
+		    virtual-params-to-interface:
+		    	([],familyname,replace,annot) -> []
+		    virtual-params-to-interface:
+		    	([param | rest],familyname,replace,annot) -> 
+		    		[Param(
+		             				annot
+		           					, ClassOrInterfaceType(TypeName(Id(<virtual-param-get-type>param)), None())
+		           					, Id(<virtual-param-get-varname>param)
+		           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname,replace,annot)]
+		           				
+		           				
+		    virtual-params-to-interface-replace:
+		    	([],familyname,replace,annot) -> []
+		    virtual-params-to-interface-replace:
+		    	([param | rest],familyname,replace,annot) -> 
+		    		[Param( 
+		             				annot
+		           					, ClassOrInterfaceType(TypeName(Id(replace)), None())
+		           					, Id(<virtual-param-get-varname>param)
+		           				) | <virtual-params-to-interface-replace <+ virtual-params-to-interface> (rest,familyname,replace,annot)]
+		           				where <structurally-equal> (<virtual-param-get-type>param,familyname)
+		           				
+		           				
+		// Constructor
+		
+		
+			virtual-params-to-constructor:
+		    	[] -> []
+		    virtual-params-to-constructor:
+		    	[param | rest] -> 
+		    	[ExprName(Id(<virtual-param-get-varname>param)) | <virtual-params-to-constructor> rest]
+		
+           				
+    // Type-Interface:
+    	// Submethods:
+    	
+    	
+		    virtual-classes-to-interface:
+		    	([],familyname) -> []
+		    virtual-classes-to-interface:
+		    	([FamilyBodyDec(
+			            VirtualClassDec(
+			              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+			            , ClassBody(body)
+			            )
+			          ) | rest],familyname) ->
+			          [AbstractMethodDec(
+		          				[Public()]
+		        				, None()
+		        				, ClassOrInterfaceType(TypeName(Id("A")), None())
+		        				, Id(classname)
+		        				, <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,"A",[])
+		        			, None()
+		        			) | <virtual-classes-to-interface> (rest,familyname)]
+		        			
+		        			
+	    // Main:
+	    
+	    
+		    desugar-family-type-interface:
+		    	(familyname,super,virtualClasses) ->
+		    	InterfaceDec(
+		     			InterfaceDecHead(
+		        			[Public()]
+		      				, Id("Types")
+		     				, Some(TypeParams([TypeParam(Id("A"), None())]))
+		     				, <family-super> (super,"Types",Some(TypeArgs([ClassOrInterfaceType(TypeName(Id("A")), None())])))
+		      			)
+		    			,<virtual-classes-to-interface> (virtualClasses,familyname)
+		    		)
+		    		
+		    		
+	// Super:
+	
+	
+	    family-super:
+	    	([],interfaceName,typeParams) -> []
+	    family-super:
+	    	([FamilyClassId(superFamilyName) | rest],interfaceName,typeParams) ->
+	    	[InterfaceType(
+	    		TypeName(PackageOrTypeName(Id(superFamilyName)), Id(interfaceName)), 
+	    		typeParams
+	    	) | <family-super> (rest,interfaceName,typeParams)]
+	    family-super:
+	    	(Some(FamilySuper([FamilyClassId(superFamilyName) | rest])),interfaceName,typeParams) ->
+	    	Some(ExtendsInterfaces([InterfaceType(
+	    		TypeName(PackageOrTypeName(Id(superFamilyName)), Id(interfaceName)),
+	    		typeParams
+	    	) | <family-super> (rest,interfaceName,typeParams)]))
+	   	family-super:
+	   		(None(),interfaceName,typeParams) -> None()
+	   		
+	   		
+	   	family-super-list:
+	    	[] -> []
+	    family-super-list:
+	    	[FamilyClassId(superFamilyName) | rest] ->
+	    	<nub> [<strip-annos> superFamilyName | <family-super-list> rest]
+	    family-super-list:
+	    	Some(FamilySuper([FamilyClassId(superFamilyName) | rest])) ->
+	    	<nub> [<strip-annos> superFamilyName | <family-super-list> rest]
+	   	family-super-list:
+	   		None() -> []
+	   		
+	   		
+	// Methods Interface:
+		// Submethods:
+		
+		
+		    function-search-methodnames-bodyparts:
+		    	[] -> []
+		    function-search-methodnames-bodyparts:
+		    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methodnames-bodyparts> rest
+		    function-search-methodnames-bodyparts:
+		    	[MethodDec(
+		            MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            )
+		          , body
+		          ) | rest] -> <union>([methodName],<function-search-methodnames-bodyparts> rest)
+		          
+		          
+		    function-search-methodnames:
+		    	[] -> []
+		    function-search-methodnames:
+		    	[FamilyBodyDec(
+			            VirtualClassDec(
+			              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+			            , ClassBody(body)
+			            )
+			          ) | rest] -> <union>(<function-search-methodnames-bodyparts> body,<function-search-methodnames> rest)
+			          
+			          
+			function-search-methods-bodyparts:
+		    	[] -> []
+		    function-search-methods-bodyparts:
+		    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methods-bodyparts> rest
+		    function-search-methods-bodyparts:
+		    	[MethodDec(
+		            MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            )
+		          , body
+		          ) | rest] -> <concat>[[
+		          	AbstractMethodDec(
+		          annot
+		        , typeParams
+		        , result
+		        , Id(methodName)
+		        , params
+		        , throws
+		        ) 	
+		          ],<function-search-methods-bodyparts> rest]
+		          
+		          
+		    function-search-methods:
+		    	[] -> []
+		    function-search-methods:
+		    	[FamilyBodyDec(
+			            VirtualClassDec(
+			              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+			            , ClassBody(body)
+			            )
+			          ) | rest] -> <concat> [<function-search-methods-bodyparts> body,<function-search-methods> rest]
+			          
+			          
+		// Main:
+		
+		
+		    desugar-family-function-interface:
+		    	(familyname,super,virtualClasses) ->
+		    	InterfaceDec(
+		     			InterfaceDecHead(
+		        			[Public()]
+		      				, Id("Methods")
+		     				, None()
+		     				, <family-super> (super,"Methods",None())
+		      			)
+		    			,
+		    		  	<function-search-methods> virtualClasses
+		    		)
+		    		
+		    		
+	// Generator-Class
+	
+	
+		// Unbenutzte Strategien Anfang:
+		/*
+		
+		function-search-typemethods-methods-delegation:
+			((methodHead,methodHeadVariables,methodHeadFamilyname),typeVariableName,[method | methods]) -> 
+			[
+				MethodDec(
+				  methodHead
+	              , Block(
+	                  [ Return(
+	                      Some(
+	                        Invoke(
+	                          Method(MethodName(AmbName(Id(typeVariableName)), Id(method)))
+	                        , methodHeadVariables
+	                        )
+	                      )
+	                    )
+	                  ]
+	                )
+	              ) | <function-search-typemethods-methods-delegation> methods
+			]
+			
+			
+		function-search-typemethods:
+			(familyname,super,[],interfaceName,[],methods) -> []
+		function-search-typemethods:
+			(familyname,super,[],interfaceName,[type | types],methods) -> [
+				MethodDec(
+	            <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),1)
+	          , Block(
+	              [ LocalVarDecStm(
+	                        LocalVarDec(
+	                          [Final()]
+	                        , ClassOrInterfaceType(TypeName(PackageOrTypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), Id("Methods")), None())
+	                        , [ VarDec(
+	                              Id(<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),type,"Instance"))
+	                            , Invoke(
+	                                Method(
+	                                  QNewInstance(
+	                                    NewInstance(
+	                                      None()
+	                                    , ClassOrInterfaceType(TypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), None())
+	                                    , []
+	                                    , None()
+	                                    )
+	                                  , None()
+	                                  , Id("Generator")
+	                                  , None()
+	                                  , []
+	                                  , None()
+	                                  )
+	                                , None()
+	                                , Id(type)
+	                                )
+	                              , <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),2)
+	                              )
+	                            )
+	                          ]
+	                        )
+	                      ),
+	              	Return(
+	                        Some(
+	                          NewInstance(
+	                            None()
+	                          , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+	                          , []
+	                          , Some(
+	                              ClassBody(
+	                              	<function-search-typemethods-methods-delegation>(
+	                              		<methodHead>(familyname,method),
+	                              		<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),<getFieldNumber>(type,1),"Instance"),
+	                              		methods)
+	                              )
+	                            )
+	                          )
+	                        )
+	                      )
+	              ]
 	            )
-	          ) | rest],newClassName,interfaceName) -> [ MethodDec(
-            MethodDecHead(
+	          ) |
+	          <function-search-typemethods>(familyname,super,rest,interfaceName,<remove>(types,classname),methods)
+			]
+			
+			
+		function-search-typemethods-body:
+			([MethodDec(
+	            MethodDecHead(
+	              annot
+	            , methodDecHead
+	            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
+	            , Id(classname)
+	            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+	            , None()
+	            )
+	          , body)
+				],methods) -> []
+				
+		*/
+		// Unbenutzte Strategien Ende
+		
+		
+		// Current Types:
+			current-types:
+				([]) -> []
+			current-types:
+				([FamilyBodyDec(
+				            VirtualClassDec(
+				              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+				            , ClassBody(body)
+				            )
+				          ) | rest]) -> 
+				          <strip-annos>[(classname,
+			        		<virtual-params-to-signature-replace <+ virtual-params-to-signature> (virtualParams,"","",[])
+			        		) | <current-types> (rest)]
+		        		
+		// Current Methods:
+			current-methods-bodyparts:
+		    	[] -> []
+		    current-methods-bodyparts:
+		    	[FieldDec(field1,field2,field3) | rest] -> <current-methods-bodyparts> rest
+		    current-methods-bodyparts:
+		    	([MethodDec(
+		            MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            )
+		          , body
+		          ) | rest],search,replace) -> [[
+		          	(methodName,<params-to-signature-replace <+ params-to-signature> (params,search,replace) )
+		          ] | <current-methods-bodyparts> (rest,search,replace)]
+		          
+		          
+		    current-methods:
+		    	([]) -> []
+		    current-methods:
+		    	([FamilyBodyDec(
+			            VirtualClassDec(
+			              head
+			            , ClassBody(body)
+			            )
+			          ) | rest],search,replace) -> 
+			          <union><strip-annos> (
+			          	<current-methods-bodyparts> (body,search,replace),
+			          	<current-methods> (rest,search,replace)
+			          )
+		
+		
+		/*function-methods:
+			(familyname,methods,methodsdone) ->
+			[
+			MethodDec(
+	            <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),1)
+	          , Block(
+	              [ LocalVarDecStm(
+	                        LocalVarDec(
+	                          [Final()]
+	                        , ClassOrInterfaceType(TypeName(PackageOrTypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), Id("Methods")), None())
+	                        , [ VarDec(
+	                              Id(<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),type,"Instance"))
+	                            , Invoke(
+	                                Method(
+	                                  QNewInstance(
+	                                    NewInstance(
+	                                      None()
+	                                    , ClassOrInterfaceType(TypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), None())
+	                                    , []
+	                                    , None()
+	                                    )
+	                                  , None()
+	                                  , Id("Generator")
+	                                  , None()
+	                                  , []
+	                                  , None()
+	                                  )
+	                                , None()
+	                                , Id(type)
+	                                )
+	                              , <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),2)
+	                              )
+	                            )
+	                          ]
+	                        )
+	                      ),
+	              	Return(
+	                        Some(
+	                          NewInstance(
+	                            None()
+	                          , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+	                          , []
+	                          , Some(
+	                              ClassBody(
+	                              	<function-search-typemethods-methods-delegation>(
+	                              		<methodHead>(familyname,method),
+	                              		<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),<getFieldNumber>(type,1),"Instance"),
+	                              		methods)
+	                              )
+	                            )
+	                          )
+	                        )
+	                      )
+	              ]
+	            )
+	          )
+	       ]
+			*/
+		
+		
+		// Method-Implementation:
+		
+
+			get-method-signature:
+				(MethodDec(
+		            MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            )
+		          , body
+		          ),familyname) ->
+		          (methodName,<params-to-signature>(params,familyname,"Methods"))
+
+
+			typemethod-to-super-object:
+				super ->
+				<conc-strings>("_super",super)
+
+
+			find-super-method-reversed:
+				([],method,type) -> "Error"
+			find-super-method-reversed:
+				([first | super],method,type) ->
+				<find-super-method-reversed>(super,method,type)
+				where <or(compare-first(not(elem)),compare-second(not(elem)))> <strip-annos>((method,type),(<methodList>first,<typeList>first))
+			find-super-method-reversed:
+				([first | super],method,type) ->
+				first
+				where <and(compare-first(elem),compare-second(elem))> <strip-annos>((method,type),(<methodList>first,<typeList>first))
+			find-super-method:
+				(super,method,type) -> <find-super-method-reversed>(<reverse> super,method,type)
+
+
+			method-impl:
+				([],familyname,super,[],methodsdone,type) ->
+				[]
+			method-impl:
+				([],familyname,super,[method | methods],methodsdone,type) ->
+				[
+					<method-impl> ([],familyname,super,methods,[method | methodsdone],type)
+				]
+				where <elem><strip-annos> (method,methodsdone)
+			method-impl:
+				([],familyname,super,[method | methods],methodsdone,type) ->
+				[
+					/*// Debug:
+					[LocalVarDecStm(
+						LocalVarDec(
+						   []
+						 , ClassOrInterfaceType(TypeName(Id("String")), None())
+						  , [VarDec(Id("b"), Lit(String([Chars(<write-to-string><strip-annos>
+						  
+						  // Start
+						  ([],familyname,super,methods,[method | methodsdone],type)
+						  // End
+						  
+						  )])))]
+					   )
+					 )] |
+					// Debug End*/
+					MethodDec(
+						<getFieldNumber>(<methodHead> method,0)
+					  , Block(
+						  [ Return(
+							  Some(
+								Invoke(
+								  Method(MethodName(AmbName(Id(<typemethod-to-super-object><find-super-method>(super,method,type))), Id(<getFieldNumber>(method,0))))
+								, <getFieldNumber>(<methodHead> method,1)
+								)
+							  )
+							)
+						  ]
+						)
+					  ) |  //*/
+					  <method-impl> ([],familyname,super,methods,[method | methodsdone],type)
+				]
+				where <not(elem)><strip-annos> (method,methodsdone)
+			method-impl:
+				([method | rest],familyname,super,methods,methodsdone,type) ->
+				[
+					method  | <method-impl> (rest,familyname,super,methods,[<get-method-signature>(method,familyname) | methodsdone],type)
+				]
+				
+
+			derived-object:
+				([],type,typemethodParams) -> []
+			derived-object:
+				([superClass | super],type,typemethodParams) ->
+					[]
+				where <not(elem)> (<strip-annos>type,<strip-annos><typeList>(superClass))
+			derived-object:
+				([superClass | super],type,typemethodParams) ->
+					<conc>(
+						[LocalVarDecStm(
+	                        LocalVarDec(
+	                          [Final()]
+	                        , ClassOrInterfaceType(TypeName(PackageOrTypeName(Id(superClass)), Id("Methods")), None())
+	                        , [ VarDec(
+	                              Id(<typemethod-to-super-object>superClass)
+	                            , Invoke(
+	                                Method(
+	                                  Invoke(
+	                                    Method(MethodName(AmbName(Id(superClass)), Id("Generator")))
+	                                  , []
+	                                  )
+	                                , None()
+	                                , Id(<getFieldNumber>(type,0))
+	                                )
+	                              , typemethodParams
+	                              )
+	                            )
+	                          ]
+	                        )
+	                      )] , <derived-object> (super,type,typemethodParams)
+					)
+				where <elem> (<strip-annos>type,<strip-annos><typeList>(superClass))
+		
+		
+		// Type-Methods:
+			compare-first(method):
+				((a,b),(c,d)) -> 1
+				where <method>(a,c)
+			compare-second(method):
+				((a,b),(c,d)) -> 1
+				where <method>(b,d)
+			
+			
+			sort-by-method-name:
+				((name,params),(name2,params)) -> 1
+				where <gt> (name,name2)
+			sort-by-method-name:
+				((name,[param | rest]),(name2,[param2 | rest2])) -> 1
+				where <and(compare-first(structurally-equal),compare-second(gt))>((name,name2),(param,param2))
+			sort-by-method-name:
+				((name,[param | rest]),(name2,[param2 | rest2])) ->
+					<sort-by-method-name> ((name,rest),(name,rest2))
+				where <and(compare-first(structurally-equal),compare-second(structurally-equal))>((name,name2),(param,param2))
+				
+			
+			typemethods:
+				(familyname,super,[],types,methods,typesdone) ->
+				[] where <structurally-equal> (<qsort(sort-by-method-name)>types,<qsort(sort-by-method-name)>typesdone)
+			typemethods:
+				(familyname,super,[],[],methods,typesdone) ->
+				[]
+			typemethods:
+				(familyname,super,[],[type | types],methods,typesdone) ->
+				<typemethods> (familyname,super,[],types,methods,typesdone)
+				where <elem> (<strip-annos>type,<strip-annos>typesdone)
+			// Derived Types:
+			typemethods:
+				(familyname,super,[],[type | types],methods,typesdone) ->
+				[ MethodDec(
+		            <getFieldNumber>(<typeHead> type,0)
+		          , Block(
+		             <concat> [
+		              	/*// Debug:
+		              	[LocalVarDecStm(
+          			        LocalVarDec(
+         			           []
+             			     , ClassOrInterfaceType(TypeName(Id("String")), None())
+            			      , [VarDec(Id("b"), Lit(String([Chars(<write-to-string><strip-annos><derived-object>(<family-super-list>super,type,<getFieldNumber>(<typeHead>type,1)))])))]
+           			       )
+           			     )],
+           			    // Debug End*/
+           			    <derived-object>(<family-super-list>super,type,<getFieldNumber>(<typeHead>type,1)),
+		              	[Return(
+		                  Some(
+		                    NewInstance(
+		                      None()
+		                    , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+		                    , []
+		                    , Some(
+		                        ClassBody(
+		                          <method-impl>([],familyname,<family-super-list>super,methods,[],type)
+		                        )
+		                      )
+		                    )
+		                  )
+		                )]
+		              ]
+		            )
+		          )
+		          | <typemethods> (familyname,super,[],types,methods,[type | typesdone])
+		        ]
+				where <not(elem)> (<strip-annos>type,<strip-annos>typesdone)
+			// Generic Types:
+		    typemethods:
+		    	(familyname,super,[FamilyBodyDec(
+			            VirtualClassDec(
+			              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+			            , ClassBody(body)
+			            )
+			          ) | rest],types,methods,typesdone) -> [ MethodDec(
+		            MethodDecHead(
+		              [Public()]
+		            , None()
+		            , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+		            , Id(classname)
+		            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,"Methods",[Final()])
+		            , None()
+		            )
+		          , Block(
+		             <concat> [ 
+		              	/*// Debug:
+		              	[LocalVarDecStm(
+          			        LocalVarDec(
+         			           []
+             			     , ClassOrInterfaceType(TypeName(Id("String")), None())
+            			      , [VarDec(Id("a"), Lit(String([Chars(<write-to-string><strip-annos>
+            			      
+            			      [<derived-object>(<family-super-list>super,(classname,
+		           			<virtual-params-to-signature-replace <+ virtual-params-to-signature>
+		       					(virtualParams,familyname,"Methods",[Final()])),
+		               			<virtual-params-to-constructor>virtualParams)]
+            			      
+            			      )])))]
+           			       )
+           			     )],
+           			    // Debug End*/
+		          		<derived-object>(<family-super-list>super,(classname,
+		           			<virtual-params-to-signature-replace <+ virtual-params-to-signature>
+		       					(virtualParams,familyname,"Methods",[Final()])),
+		               			<virtual-params-to-constructor>virtualParams),
+		              	[Return(
+		                  Some(
+		                    NewInstance(
+		                      None()
+		                    , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+		                    , []
+		                    , Some(
+		                        ClassBody(
+		                          
+		                          	<method-impl>(body,familyname,<family-super-list>super,methods,[],
+		                          	(classname,
+					           			<virtual-params-to-signature-replace <+ virtual-params-to-signature>
+					       					(virtualParams,familyname,"Methods",[Final()])))
+		                          
+		                        )
+		                      )
+		                    )
+		                  )
+		                )
+		                ]
+		              ]
+		            )
+		          )
+		          |
+		           <typemethods>(familyname,super,rest,types,methods,[
+		          	(classname,<virtual-params-to-signature-replace <+ virtual-params-to-signature>(virtualParams,familyname,"Methods",[Final()]))
+		          	| typesdone])
+		        ]
+	        
+	    // Main:
+		    desugar-family-class:
+				(familyname,super,virtualClasses) ->
+				ClassDec(
+		      ClassDecHead(
+		        [Public()]
+		      , Id("Generator")
+		      , None()
+		      , None()
+		      , Some(
+		          ImplementsDec(
+		            [ InterfaceType(
+		                TypeName(Id("Types")) 
+		              , Some(TypeArgs([ClassOrInterfaceType(TypeName(Id("Methods")), None())]))
+		              )
+		            ]
+		          )
+		        )
+		      )
+		    , ClassBody(
+		        <typemethods> (familyname,super,virtualClasses,
+		        	<aggregate-types> <family-super-list> super,
+		        	<aggregate-methods> <family-super-list> super,
+		        	[]
+		        )
+		      )
+		    )
+	    
+    
+    // Generate sugar to import
+    
+    
+	    aggregate-methods:
+	    	[] -> []
+	    aggregate-methods:
+	    	[superName | rest] ->
+	    	<union>(<methodList>(superName), <aggregate-methods> rest)
+	    	
+	    	
+	    aggregate-types:
+	    	[] -> []
+	    aggregate-types:
+	    	[superName | rest] ->
+	    	<union>(<typeList>(superName), <aggregate-types> rest)
+	    	
+	    	
+	    desugar-family-sugar: // Content of test5.sugj
+	    	(familyname,super,virtualClasses) -> 
+	    	[
+	    	TypeImportDec(TypeName(Id("IntAlgSuper"))),
+	    	ExtensionDec(
+	      ExtensionDecHead([Public()], Id(familyname))
+	    , ExtensionBody(
+	        [ transformation-elem(
+	            Rules(
+	              [ RDefNoArgs(
+	                  "superMethods"
+	                , RuleNoCond(
+	                    NoAnnoList(Op(familyname, []))
+	                  , App(
+	                      CallNoArgs(SVar("conc"))
+	                    , NoAnnoList(
+	                        Tuple(
+	                          [ NoAnnoList(
+	                              List(
+	                                [NoAnnoList(
+	                                   Tuple([NoAnnoList(Str("\"Sub\"")), NoAnnoList(Str("\"print\""))])
+	                                 )]
+	                              )
+	                            )
+	                          , App(CallNoArgs(SVar("superMethods")), NoAnnoList(Op("IntAlg", [])))
+	                          ]
+	                        )
+	                      )
+	                    )
+	                  )
+	                )
+	              ]
+	            )
+	          )
+	        ]
+	      )
+	    )
+	    ]
+	    
+	// Generator static method:
+	    desugar-family-generator:
+	    	(familyname) ->
+	    	MethodDec(
+	            MethodDecHead(
+	              [Public(), Static()]
+	            , None()
+	            , ClassOrInterfaceType(TypeName(Id("Generator")), None())
+	            , Id("Generator")
+	            , []
+	            , None()
+	            )
+	          , Block(
+	              [ If(
+	                  Eq(ExprName(Id("_generator")), Lit(Null()))
+	                , ExprStm(
+	                    Assign(
+	                      ExprName(Id("_generator"))
+	                    , QNewInstance(
+	                        NewInstance(
+	                          None()
+	                        , ClassOrInterfaceType(TypeName(Id(familyname)), None())
+	                        , []
+	                        , None()
+	                        )
+	                      , None()
+	                      , Id("Generator")
+	                      , None()
+	                      , []
+	                      , None()
+	                      )
+	                    )
+	                  )
+	                )
+	              , Return(Some(ExprName(Id("_generator"))))
+	              ]
+	            )
+	          )
+	// Main:
+	  	desugar-family:
+	    	FamilyDec(
+	      		FamilyDecHead(FamilyClassId(familyname), super)
+	    	,FamilyBody(
+		        virtualClasses
+		      )
+	    	) -> ClassDec(
+	      ClassDecHead([Public()], Id(familyname), None(), None(), None())
+	    , ClassBody(
+	        [
+	    		<desugar-family-type-interface> (familyname,super,virtualClasses),
+	    		<desugar-family-function-interface> (familyname,super,virtualClasses),
+	    		<desugar-family-class> (familyname,super,virtualClasses),
+	    		FieldDec(
+	            	[Protected(), Static()]
+	         		, ClassOrInterfaceType(TypeName(Id("Generator")), None())
+	          		, [VarDec(Id("_generator"))]
+	          	),
+	    		<desugar-family-generator> (familyname)
+	    	]
+	    	)
+	    )
+	// Temporär:
+	typeList:
+   		("IntAlg") -> <strip-annos>[("Lit",["Integer"])]
+   	typeList:
+   		("IntAlgSub") -> <union><strip-annos>([("Sub",["Methods","Methods"])],<typeList>("IntAlg"))
+   	typeList:
+   		("IntAlgCount") -> <union><strip-annos>([("Lit",["Integer"])],<typeList>("IntAlg"))
+   	typeList:
+   		("IntAlgSubCount") -> <union><strip-annos>([("Sub",["Methods","Methods"])],<typeList>("IntAlgSub"),<typeList>("IntAlgCount"))
+   	methodList:
+   		("IntAlg") -> <strip-annos>([("print",["String"])])
+   	methodList:
+   		("IntAlgSub") -> <union><strip-annos>([("print",["String"])],<methodList>("IntAlg"))
+   	methodList:
+   		("IntAlgCount") -> <union><strip-annos>([("count",[])],<methodList>("IntAlg"))
+   	methodList:
+   		("IntAlgSubCount") -> <union><strip-annos>([("count",[])],<methodList>("IntAlgSub"),<methodList>("IntAlgCount"))
+	
+	typeHead:
+   		("Sub",["Methods","Methods"]) -> (MethodDecHead(
               [Public()]
             , None()
-            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
-            , Id(classname)
-            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+            , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+            , Id("Sub")
+            , [Param(
+             				[Final()]
+           					, ClassOrInterfaceType(TypeName(Id("Methods")), None())
+           					, Id("e1")
+           				),
+				Param(
+	 				[Final()]
+					, ClassOrInterfaceType(TypeName(Id("Methods")), None())
+					, Id("e2")
+				)] // <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
             , None()
-            )
-          , Block(
-              [ 
-              	Return(
-                  Some(
-                    NewInstance(
-                      None()
-                    , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
-                    , []
-                    , Some(
-                        ClassBody(
-                          body
-                        )
-                      )
-                    )
-                  )
-                )
-              ]
-            )
-          )
-        ]
-    desugar-family-class:
-		(familyname,super,virtualClasses) ->
-		ClassDec(
-      ClassDecHead(
-        [Public()]
-      , Id(<conc-strings>(familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))
-      , None()
-      , None()
-      , Some(
-          ImplementsDec(
-            [ InterfaceType(
-                TypeName(Id(<conc-strings>("I",familyname))) 
-              , Some(TypeArgs([ClassOrInterfaceType(TypeName(Id(<conc-strings>("I",familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))))), None())]))
-              )
-            ]
-          )
-        )
-      )
-    , ClassBody(
-        <function-search-typemethods> (familyname,super,virtualClasses,
-        	<conc-strings>(familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses))),
-        	<conc-strings>("I",familyname,<concat-strings>(<string-sort>(<function-search-methodnames> virtualClasses)))
-        )
-      )
-    )
-  	desugar-family:
-    	FamilyDec(
-      		FamilyDecHead(FamilyClassId(familyname), super)
-    	,FamilyBody(
-	        virtualClasses
-	      )
-    	) -> [
-    		<desugar-family-type-interface> (familyname,super,virtualClasses),
-    		<desugar-family-function-interface> (familyname,super,virtualClasses),
-    		<desugar-family-class> (familyname,super,virtualClasses)
-    	]
+            ),[ExprName(Id("e1")),ExprName(Id("e2"))])
+         
+    typeHead:
+   		("Lit",["Integer"]) -> (MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+            , Id("Lit")
+            , [Param(
+             				[Final()]
+           					, ClassOrInterfaceType(TypeName(Id("Integer")), None())
+           					, Id("x")
+           				)] // <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+            , None()
+            ),[ExprName(Id("x"))])
+    methodHead:
+    	("print",["String"]) -> (
+    		MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id("String")), None())
+            , Id("print")
+            , [Param(
+                 []
+               , ClassOrInterfaceType(TypeName(Id("String")), None())
+               , Id("prefix")
+               )]
+            , None()
+            ),
+            [ExprName(Id("prefix"))]
+    	)
+    methodHead:
+    	("count",[]) -> (
+    		MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id("Integer")), None())
+            , Id("count")
+            , []
+            , None()
+            ),
+            []
+    	)
 }
+
+

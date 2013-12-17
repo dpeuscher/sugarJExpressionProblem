@@ -1,0 +1,61 @@
+package sugarJExpressionProblem;
+
+import org.sugarj.languages.Java;
+import concretesyntax.Java;
+import IntAlgSuper;
+
+public sugar IntAlgSub {
+  rules
+   	typeList:
+   		("IntAlgSub") -> <union><strip-annos>([("Sub",["Methods","Methods"]),("Lit",["Integer"])],<typeList>("IntAlg","Sub"))
+   	methodList:
+   		("IntAlgSub") -> <union><strip-annos>([("print",["String"])],<methodList>("IntAlg"))
+   	typeHead:
+   		("IntAlgSub","Sub") -> ((MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
+            , Id(classname)
+            , [Param(
+             				annot
+           					, ClassOrInterfaceType(TypeName(Id("Methods")), None())
+           					, Id("e1")
+           				),
+				Param(
+	 				annot
+					, ClassOrInterfaceType(TypeName(Id("Methods")), None())
+					, Id("e2")
+				)] // <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+            , None()
+            ),[ExprName(Id(e1)),ExprName(Id(e2))],"IntAlgSub")
+         )
+    typeHead:
+   		("IntAlgSub","Lit") -> (MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
+            , Id(classname)
+            , [Param(
+             				annot
+           					, ClassOrInterfaceType(TypeName(Id("Integer")), None())
+           					, Id("x")
+           				)] // <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+            , None()
+            ),[ExprName(Id(x))],"IntAlg")
+    methodHead:
+    	("IntAlgSub","print") -> (
+    		MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id("String")), None())
+            , Id("print")
+            , [Param(
+                 []
+               , ClassOrInterfaceType(TypeName(Id("String")), None())
+               , Id("prefix")
+               )]
+            , None()
+            ),
+            [ExprName(Id("prefix"))]
+    	)
+}
