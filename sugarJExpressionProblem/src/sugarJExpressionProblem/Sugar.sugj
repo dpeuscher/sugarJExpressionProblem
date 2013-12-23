@@ -65,7 +65,19 @@ public sugar Sugar {
   		getFieldNumber:
   			((f0,f1,f2),number) -> f2 where <eq>(number,2)
   		getFieldNumber:
+  			(([],f1),number) -> [] where <eq>(number,0)
+  		getFieldNumber:
+  			(([],[]),number) -> [] where <eq>(number,0)
+  		getFieldNumber:
+  			((f0,[]),number) -> f0 where <eq>(number,0)
+  		getFieldNumber:
   			((f0,f1),number) -> f0 where <eq>(number,0)
+  		getFieldNumber:
+  			(([],f1),number) -> f1 where <eq>(number,1)
+  		getFieldNumber:
+  			(([],[]),number) -> [] where <eq>(number,1)
+  		getFieldNumber:
+  			((f0,[]),number) -> [] where <eq>(number,1)
   		getFieldNumber:
   			((f0,f1),number) -> f1 where <eq>(number,1)
 	  	getFieldNumber:
@@ -89,6 +101,14 @@ public sugar Sugar {
   	
 		// Signature:
 		
+
+	  		param-get-type:
+	  			Param([],ClassOrInterfaceType(TypeName(Id(type)), None())
+                 , Id(varname)) -> type
+	  		param-get-varname:
+	  			Param([],ClassOrInterfaceType(TypeName(Id(type)), None())
+                 , Id(varname)) -> varname
+
 		
 		    params-to-signature:
 		    	([],familyname,replace) -> []
@@ -105,7 +125,14 @@ public sugar Sugar {
                  , Id(varname)) | rest],search,replace) -> 
 		    		[replace | <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
 		           				where <structurally-equal> (type,search)
-		           				
+
+		    		
+			params-to-constructor:
+		    	[] -> []
+		    params-to-constructor:
+		    	[param | rest] -> 
+		    	[ExprName(Id(<param-get-varname>param)) | <params-to-constructor> rest]
+
 		           				
 		    paramlist-to-params:
 		    	[] -> []
@@ -428,16 +455,14 @@ public sugar Sugar {
 			            , Id(classname)
 			            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,"Methods",[Final()])
 			            , None()
-			            ),<virtual-params-to-constructor> virtualParams)) | <current-types-head> (rest)]
+			            ),<virtual-params-to-constructor> virtualParams)) | <current-types-head> (rest,familyname)]
 	        		
 	        		
 		// Current Methods Head:
-			current-methods-head-bodyparts:
-		    	([],search,replace) -> []
-		    current-methods-head-bodyparts:
-		    	([FieldDec(field1,field2,field3) | rest],search,replace) -> <current-methods-head-bodyparts> (rest,search,replace)
-		    current-methods-head-bodyparts:
-		    	([MethodDec(
+
+
+		    current-methods-head-bodyparts-method-only:
+		    	(MethodDec(
 		            MethodDecHead(
 		              annot
 		            , typeParams
@@ -447,30 +472,50 @@ public sugar Sugar {
 		            , throws
 		            )
 		          , body
-		          ) | rest],search,replace) -> [[
-		          	<union><strip-annos>((methodName,<params-to-signature-replace <+ params-to-signature> (params,search,replace)),
-		          	MethodDecHead(
+		          ),search,replace) ->
+		          	<strip-annos>((methodName,<params-to-signature-replace <+ params-to-signature> (params,search,replace)),
+		          	(MethodDecHead(
 		              annot
 		            , typeParams
 		            , result
 		            , Id(methodName)
 		            , params
 		            , throws
-		            ))
-		          ] | <current-methods-head-bodyparts> (rest,search,replace)]
+		            ),<params-to-constructor> params))
+		          
+
+
+		    current-methods-head-bodyparts-field-only:
+				FieldDec(field1,field2,field3) -> []
+
+
+			current-methods-head-bodyparts:
+		    	([],search,replace) -> []
+		    current-methods-head-bodyparts:
+		    	([field | rest],search,replace) -> <current-methods-head-bodyparts> (rest,search,replace)
+		    	where <current-methods-head-bodyparts-field-only> field
+		    current-methods-head-bodyparts:
+		    	([method | rest],search,replace) ->
+		    	[<current-methods-head-bodyparts-method-only> (method,search,replace)
+		    	 | <current-methods-head-bodyparts> (rest,search,replace)]
+		          
+		          
+		    current-methods-head-bodypart-only:
+    		  (FamilyBodyDec(
+	            VirtualClassDec(
+	              head
+	            , ClassBody(body)
+	            )
+	          ),search,replace) -> 
+	          <current-methods-head-bodyparts>(body,search,replace)
 		          
 		          
 		    current-methods-head:
-		    	([]) -> []
+		    	([],search,replace) -> []
 		    current-methods-head:
-		    	([FamilyBodyDec(
-			            VirtualClassDec(
-			              head
-			            , ClassBody(body)
-			            )
-			          ) | rest],search,replace) -> 
+		    	([bodypart | rest],search,replace) -> 
 			          <union><strip-annos> (
-			          	<current-methods-head-bodyparts> (body,search,replace),
+			          	<current-methods-head-bodypart-only> (bodypart,search,replace),
 			          	<current-methods-head> (rest,search,replace)
 			          )
 		
@@ -852,18 +897,23 @@ public sugar Sugar {
 	    
 	    
 	    generate-sugar-head-signature:
+	    	[] -> []
+	    generate-sugar-head-signature:
 	    	[param | rest] ->
-	    	[NoAnnoList(Str(<conc-strings>("\"",param,"\""))) | <generate-sugar-head-signature> rest]
+	    	[NoAnnoList(Str(param)) | <generate-sugar-head-signature> rest]
 	    
 	    
 	    generate-sugar-head:
-	    	(familyname,super,[ head | rest],listname) ->
+	    	(familyname,[],listname) ->
+	    	[]
+	    generate-sugar-head:
+	    	(familyname,[ head | rest],listname) ->
 	    		[ RDefNoArgs(
                   listname
                 , RuleNoCond(
                     NoAnnoList(
                       Tuple(
-                        [ NoAnnoList(Str(<conc>("\"",<getFieldNumber>(<getFieldNumber>(head,0),0),"\"")))
+                        [ NoAnnoList(Str(<write-to-string><getFieldNumber>(<getFieldNumber>(head,0),0)))
                         , NoAnnoList(
 							List(<generate-sugar-head-signature><getFieldNumber>(<getFieldNumber>(head,0),1)
 							)
@@ -874,7 +924,8 @@ public sugar Sugar {
                   , App(CallNoArgs(SVar("read-from-string")), NoAnnoList(Str(<write-to-string><getFieldNumber>(head,1))))
                   )
                 )
-                | <generate-sugar-head> (familyname,super,rest,listname) ]
+                //| <generate-sugar-head> (familyname,rest,listname) 
+                ]
 	    
 	    
 	    desugar-family-sugar:
@@ -919,7 +970,9 @@ public sugar Sugar {
                   )
                 )*/
 							  <generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
-				              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList")
+				              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList"),
+				              <generate-sugar-head> (familyname,<current-types-head> (virtualClasses,familyname),"typeHead"),
+							  <generate-sugar-head> (familyname,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead")
 				              
 				            ]
 				        )
@@ -927,17 +980,6 @@ public sugar Sugar {
 			        ]
 			      )
 			    ) 
-			  ],
-			  	[<toplevel-debug> [
-			  	<generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
-	              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList")
-						  	//<generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList")
-			  		//<current-types> virtualClasses
-				  /*<generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
-	              <generate-sugar-list> (familyname,super/*,<current-methods> (virtualClasses,familyname,"Methods")/*,"methodList")/*,
-	              <generate-sugar-head> (familyname,super,<current-types-head> (virtualClasses,familyname),"typeHead"),
-	              <generate-sugar-head> (familyname,super,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead")*/
-			  ]
 			  ]
 			]
 			
@@ -992,21 +1034,6 @@ public sugar Sugar {
 	      ClassDecHead([Public()], Id(familyname), None(), None(), None())
 	    , ClassBody(
 	        [
-	        	// Debug:
-					LocalVarDecStm(
-						LocalVarDec(
-						   []
-						 , ClassOrInterfaceType(TypeName(Id("String")), None())
-						  , [VarDec(Id("b"), Lit(String([Chars(<write-to-string><strip-annos>
-						  
-						  // Start
-	        				//<desugar-family-sugar> (familyname,<family-super-list>super,virtualClasses)
-						  // End
-						  
-						  )])))]
-					   )
-					 ),
-					// Debug End*/
 	    		<desugar-family-type-interface> (familyname,super,virtualClasses),
 	    		<desugar-family-function-interface> (familyname,super,virtualClasses),
 	    		<desugar-family-class> (familyname,super,virtualClasses),
