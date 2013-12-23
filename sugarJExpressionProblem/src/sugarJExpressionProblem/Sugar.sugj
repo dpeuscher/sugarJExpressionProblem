@@ -31,6 +31,31 @@ public sugar Sugar {
     //direction = desugar-empty-super <+ desugar-virtual-class-body <+ id
 
   rules
+  
+  
+  	// Debug:
+  		toplevel-debug:
+  			data -> ClassDec(
+			      ClassDecHead([], Id("test2"), None(), None(), None())
+			    , ClassBody(
+			        [ MethodDec(
+			            MethodDecHead(
+			              [Public()]
+			            , None()
+			            , ClassOrInterfaceType(TypeName(Id("String")), None())
+			            , Id("debug")
+			            , []
+			            , None()
+			            )
+			          , Block(
+			              [Return(Some(Lit(String([Chars(<write-to-string><strip-annos>data)]))))]
+			            )
+			          )
+			          ]
+			       )
+			     )
+  
+  
   	// General Strategies:
   	
   		getFieldNumber:
@@ -329,128 +354,27 @@ public sugar Sugar {
 		    		
 		    		
 	// Generator-Class
-	
-	
-		// Unbenutzte Strategien Anfang:
-		/*
-		
-		function-search-typemethods-methods-delegation:
-			((methodHead,methodHeadVariables,methodHeadFamilyname),typeVariableName,[method | methods]) -> 
-			[
-				MethodDec(
-				  methodHead
-	              , Block(
-	                  [ Return(
-	                      Some(
-	                        Invoke(
-	                          Method(MethodName(AmbName(Id(typeVariableName)), Id(method)))
-	                        , methodHeadVariables
-	                        )
-	                      )
-	                    )
-	                  ]
-	                )
-	              ) | <function-search-typemethods-methods-delegation> methods
-			]
-			
-			
-		function-search-typemethods:
-			(familyname,super,[],interfaceName,[],methods) -> []
-		function-search-typemethods:
-			(familyname,super,[],interfaceName,[type | types],methods) -> [
-				MethodDec(
-	            <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),1)
-	          , Block(
-	              [ LocalVarDecStm(
-	                        LocalVarDec(
-	                          [Final()]
-	                        , ClassOrInterfaceType(TypeName(PackageOrTypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), Id("Methods")), None())
-	                        , [ VarDec(
-	                              Id(<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),type,"Instance"))
-	                            , Invoke(
-	                                Method(
-	                                  QNewInstance(
-	                                    NewInstance(
-	                                      None()
-	                                    , ClassOrInterfaceType(TypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), None())
-	                                    , []
-	                                    , None()
-	                                    )
-	                                  , None()
-	                                  , Id("Generator")
-	                                  , None()
-	                                  , []
-	                                  , None()
-	                                  )
-	                                , None()
-	                                , Id(type)
-	                                )
-	                              , <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),2)
-	                              )
-	                            )
-	                          ]
-	                        )
-	                      ),
-	              	Return(
-	                        Some(
-	                          NewInstance(
-	                            None()
-	                          , ClassOrInterfaceType(TypeName(Id("Methods")), None())
-	                          , []
-	                          , Some(
-	                              ClassBody(
-	                              	<function-search-typemethods-methods-delegation>(
-	                              		<methodHead>(familyname,method),
-	                              		<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),<getFieldNumber>(type,1),"Instance"),
-	                              		methods)
-	                              )
-	                            )
-	                          )
-	                        )
-	                      )
-	              ]
-	            )
-	          ) |
-	          <function-search-typemethods>(familyname,super,rest,interfaceName,<remove>(types,classname),methods)
-			]
-			
-			
-		function-search-typemethods-body:
-			([MethodDec(
-	            MethodDecHead(
-	              annot
-	            , methodDecHead
-	            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
-	            , Id(classname)
-	            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
-	            , None()
-	            )
-	          , body)
-				],methods) -> []
-				
-		*/
-		// Unbenutzte Strategien Ende
 		
 		
 		// Current Types:
 			current-types:
-				([]) -> []
+				([],search,replace) -> []
 			current-types:
 				([FamilyBodyDec(
 				            VirtualClassDec(
 				              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
 				            , ClassBody(body)
 				            )
-				          ) | rest]) -> 
+				          ) | rest],search,replace) -> 
 				          <strip-annos>[(classname,
-			        		<virtual-params-to-signature-replace <+ virtual-params-to-signature> (virtualParams,"","",[])
-			        		) | <current-types> (rest)]
+			        		<virtual-params-to-signature-replace <+ virtual-params-to-signature> (virtualParams,search,replace,[])
+			        		) | <current-types> (rest,search,replace)]
 		        		
 		// Current Methods:
 			current-methods-bodyparts:
-		    	[] -> []
+		    	([],search,replace) -> []
 		    current-methods-bodyparts:
-		    	[FieldDec(field1,field2,field3) | rest] -> <current-methods-bodyparts> rest
+		    	([FieldDec(field1,field2,field3) | rest],search,replace) -> <current-methods-bodyparts> rest
 		    current-methods-bodyparts:
 		    	([MethodDec(
 		            MethodDecHead(
@@ -462,14 +386,83 @@ public sugar Sugar {
 		            , throws
 		            )
 		          , body
-		          ) | rest],search,replace) -> [[
+		          ) | rest],search,replace) -> [
 		          	(methodName,<params-to-signature-replace <+ params-to-signature> (params,search,replace) )
-		          ] | <current-methods-bodyparts> (rest,search,replace)]
+		           | <current-methods-bodyparts> (rest,search,replace)]
 		          
 		          
+		    current-methods-bodydec:
+		    (FamilyBodyDec(
+			            VirtualClassDec(
+			              head
+			            , ClassBody(body)
+			            )
+			          ),search,replace) -> <current-methods-bodyparts> (body,search,replace)
+			          
+		    
 		    current-methods:
+		    	([],search,replace) -> []
+		    current-methods:
+		    	([bodydec | rest],search,replace) -> 
+					<concat> [
+			          	<current-methods-bodydec> (bodydec,search,replace),
+			          	<current-methods> (rest,search,replace)
+			        ]
+		
+		
+		// Current Types Head:
+		current-types-head:
+			([],familyname) -> []
+		current-types-head:
+			([FamilyBodyDec(
+			            VirtualClassDec(
+			              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
+			            , ClassBody(body)
+			            )
+			          ) | rest],familyname) -> 
+			          <strip-annos>[((classname,<virtual-params-to-signature-replace <+ virtual-params-to-signature> (virtualParams,familyname,"Methods",[Final()])),
+			          (MethodDecHead(
+			              [Public()]
+			            , None()
+			            , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+			            , Id(classname)
+			            , <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,"Methods",[Final()])
+			            , None()
+			            ),<virtual-params-to-constructor> virtualParams)) | <current-types-head> (rest)]
+	        		
+	        		
+		// Current Methods Head:
+			current-methods-head-bodyparts:
+		    	([],search,replace) -> []
+		    current-methods-head-bodyparts:
+		    	([FieldDec(field1,field2,field3) | rest],search,replace) -> <current-methods-head-bodyparts> (rest,search,replace)
+		    current-methods-head-bodyparts:
+		    	([MethodDec(
+		            MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            )
+		          , body
+		          ) | rest],search,replace) -> [[
+		          	<union><strip-annos>((methodName,<params-to-signature-replace <+ params-to-signature> (params,search,replace)),
+		          	MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            ))
+		          ] | <current-methods-head-bodyparts> (rest,search,replace)]
+		          
+		          
+		    current-methods-head:
 		    	([]) -> []
-		    current-methods:
+		    current-methods-head:
 		    	([FamilyBodyDec(
 			            VirtualClassDec(
 			              head
@@ -477,69 +470,9 @@ public sugar Sugar {
 			            )
 			          ) | rest],search,replace) -> 
 			          <union><strip-annos> (
-			          	<current-methods-bodyparts> (body,search,replace),
-			          	<current-methods> (rest,search,replace)
+			          	<current-methods-head-bodyparts> (body,search,replace),
+			          	<current-methods-head> (rest,search,replace)
 			          )
-		
-		
-		/*function-methods:
-			(familyname,methods,methodsdone) ->
-			[
-			MethodDec(
-	            <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),1)
-	          , Block(
-	              [ LocalVarDecStm(
-	                        LocalVarDec(
-	                          [Final()]
-	                        , ClassOrInterfaceType(TypeName(PackageOrTypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), Id("Methods")), None())
-	                        , [ VarDec(
-	                              Id(<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),type,"Instance"))
-	                            , Invoke(
-	                                Method(
-	                                  QNewInstance(
-	                                    NewInstance(
-	                                      None()
-	                                    , ClassOrInterfaceType(TypeName(Id(<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3))), None())
-	                                    , []
-	                                    , None()
-	                                    )
-	                                  , None()
-	                                  , Id("Generator")
-	                                  , None()
-	                                  , []
-	                                  , None()
-	                                  )
-	                                , None()
-	                                , Id(type)
-	                                )
-	                              , <getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),2)
-	                              )
-	                            )
-	                          ]
-	                        )
-	                      ),
-	              	Return(
-	                        Some(
-	                          NewInstance(
-	                            None()
-	                          , ClassOrInterfaceType(TypeName(Id("Methods")), None())
-	                          , []
-	                          , Some(
-	                              ClassBody(
-	                              	<function-search-typemethods-methods-delegation>(
-	                              		<methodHead>(familyname,method),
-	                              		<conc>("_",<getFieldNumber>(<typeHead>(familyname,<getFieldNumber>(type,1)),3),<getFieldNumber>(type,1),"Instance"),
-	                              		methods)
-	                              )
-	                            )
-	                          )
-	                        )
-	                      )
-	              ]
-	            )
-	          )
-	       ]
-			*/
 		
 		
 		// Method-Implementation:
@@ -845,45 +778,171 @@ public sugar Sugar {
 	    	<union>(<typeList>(superName), <aggregate-types> rest)
 	    	
 	    	
-	    desugar-family-sugar: // Content of test5.sugj
-	    	(familyname,super,virtualClasses) -> 
-	    	[
-	    	TypeImportDec(TypeName(Id("IntAlgSuper"))),
-	    	ExtensionDec(
-	      ExtensionDecHead([Public()], Id(familyname))
-	    , ExtensionBody(
-	        [ transformation-elem(
-	            Rules(
-	              [ RDefNoArgs(
-	                  "superMethods"
-	                , RuleNoCond(
-	                    NoAnnoList(Op(familyname, []))
-	                  , App(
-	                      CallNoArgs(SVar("conc"))
-	                    , NoAnnoList(
-	                        Tuple(
-	                          [ NoAnnoList(
-	                              List(
-	                                [NoAnnoList(
-	                                   Tuple([NoAnnoList(Str("\"Sub\"")), NoAnnoList(Str("\"print\""))])
-	                                 )]
-	                              )
-	                            )
-	                          , App(CallNoArgs(SVar("superMethods")), NoAnnoList(Op("IntAlg", [])))
-	                          ]
-	                        )
-	                      )
-	                    )
-	                  )
-	                )
-	              ]
-	            )
-	          )
-	        ]
-	      )
-	    )
-	    ]
+	    family-sugar-import:
+	    	[] -> []
+	    family-sugar-import:
+	    	[family | rest] -> [TypeImportDec(TypeName(Id(family))) | <family-sugar-import> rest]
 	    
+	    
+	    generate-sugar-list-types-type-param:
+	    	[] -> []
+	    generate-sugar-list-types-type-param:
+	    	[param | rest] ->
+	    	<conc>([NoAnnoList(Str(param))] , <generate-sugar-list-types-type-param> rest)
+	    	
+	    	
+	    generate-sugar-list-types-type:
+	    	(typename,params) ->
+	    	NoAnnoList(Tuple([NoAnnoList(Str(typename)), NoAnnoList(List(<generate-sugar-list-types-type-param> params))]))
+	   	
+	   	
+	   	generate-sugar-list-types:
+	   		[] -> []
+	    generate-sugar-list-types:
+	    	[type | rest] -> 
+	    	[
+	    		<generate-sugar-list-types-type> type
+	    		| <generate-sugar-list-types> rest
+			]
+	    
+	    
+	           		
+        traverse-down-super:
+        	(listname,[],types) ->
+        		NoAnnoList(
+                  List(
+                    <generate-sugar-list-types>types
+                  )
+                )
+        traverse-down-super:
+        	(listname,[super | rest],types) ->
+	        	App(
+                  CallNoArgs(SVar("conc"))
+                , NoAnnoList(
+                    Tuple(
+                    	[
+                          <traverse-down-super>(listname,rest,types),
+                          App(
+                              CallNoArgs(SVar(listname))
+                            , NoAnnoList(Tuple([NoAnnoList(Str(super))]))
+                            )
+					  ]
+                    )
+                  )
+                )
+        
+        
+	    generate-sugar-list:
+	    	(familyname,super,types,listname) ->
+	    	[RDefNoArgs(
+                  listname
+                , RuleNoCond(
+                    NoAnnoList(Tuple([NoAnnoList(Str(familyname))]))
+                    , App(
+                      CallNoArgs(SVar("nub"))
+                    , App(
+                        CallNoArgs(SVar("strip-annos"))
+                      , <traverse-down-super> (listname,super,types)
+                      )
+                    )
+                  )
+                )
+              ]
+
+	    
+	    
+	    generate-sugar-head-signature:
+	    	[param | rest] ->
+	    	[NoAnnoList(Str(<conc-strings>("\"",param,"\""))) | <generate-sugar-head-signature> rest]
+	    
+	    
+	    generate-sugar-head:
+	    	(familyname,super,[ head | rest],listname) ->
+	    		[ RDefNoArgs(
+                  listname
+                , RuleNoCond(
+                    NoAnnoList(
+                      Tuple(
+                        [ NoAnnoList(Str(<conc>("\"",<getFieldNumber>(<getFieldNumber>(head,0),0),"\"")))
+                        , NoAnnoList(
+							List(<generate-sugar-head-signature><getFieldNumber>(<getFieldNumber>(head,0),1)
+							)
+						  )
+                        ]
+                      )
+                    )
+                  , App(CallNoArgs(SVar("read-from-string")), NoAnnoList(Str(<write-to-string><getFieldNumber>(head,1))))
+                  )
+                )
+                | <generate-sugar-head> (familyname,super,rest,listname) ]
+	    
+	    
+	    desugar-family-sugar:
+	    	(familyname,super,virtualClasses) -> 
+	    	<concat>[
+/*		    	[TypeImportDec(
+			      TypeName(
+			        PackageOrTypeName(
+			          PackageOrTypeName(PackageOrTypeName(Id("org")), Id("sugarj"))
+			        , Id("languages")
+			        )
+			      , Id("Java")
+			      )
+			    )]
+			  , [TypeImportDec(TypeName(PackageOrTypeName(Id("concretesyntax")), Id("Java")))]
+			  , <family-sugar-import> <family-super-list> super
+			  ,*/ 
+			    [
+			    	ExtensionDec(
+			      ExtensionDecHead([Public()], Id(familyname))
+			    , ExtensionBody(
+				    [ transformation-elem(
+			            Rules(
+			            	<concat> [
+			            		/*RDefNoArgs(
+                  "typeList"
+                , RuleNoCond(
+                    NoAnnoList(Tuple([NoAnnoList(Str("\"IntAlg\""))]))
+                  , App(
+                      CallNoArgs(SVar("strip-annos"))
+                    , NoAnnoList(
+                        List(
+                          [ NoAnnoList(
+                              Tuple(
+                                [NoAnnoList(Str("\"Lit\"")), NoAnnoList(List([NoAnnoList(Str("\"Integer\""))]))]
+                              )
+                            )
+                          ]
+                        )
+                      )
+                    )
+                  )
+                )*/
+							  <generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
+				              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList")
+				              
+				            ]
+				        )
+				      )
+			        ]
+			      )
+			    ) 
+			  ],
+			  	[<toplevel-debug> [
+			  	<generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
+	              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList")
+						  	//<generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList")
+			  		//<current-types> virtualClasses
+				  /*<generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
+	              <generate-sugar-list> (familyname,super/*,<current-methods> (virtualClasses,familyname,"Methods")/*,"methodList")/*,
+	              <generate-sugar-head> (familyname,super,<current-types-head> (virtualClasses,familyname),"typeHead"),
+	              <generate-sugar-head> (familyname,super,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead")*/
+			  ]
+			  ]
+			]
+			
+			
+			
 	// Generator static method:
 	    desugar-family-generator:
 	    	(familyname) ->
@@ -929,10 +988,25 @@ public sugar Sugar {
 	    	,FamilyBody(
 		        virtualClasses
 		      )
-	    	) -> ClassDec(
+	    	) -> <concat> [[ ClassDec(
 	      ClassDecHead([Public()], Id(familyname), None(), None(), None())
 	    , ClassBody(
 	        [
+	        	// Debug:
+					LocalVarDecStm(
+						LocalVarDec(
+						   []
+						 , ClassOrInterfaceType(TypeName(Id("String")), None())
+						  , [VarDec(Id("b"), Lit(String([Chars(<write-to-string><strip-annos>
+						  
+						  // Start
+	        				//<desugar-family-sugar> (familyname,<family-super-list>super,virtualClasses)
+						  // End
+						  
+						  )])))]
+					   )
+					 ),
+					// Debug End*/
 	    		<desugar-family-type-interface> (familyname,super,virtualClasses),
 	    		<desugar-family-function-interface> (familyname,super,virtualClasses),
 	    		<desugar-family-class> (familyname,super,virtualClasses),
@@ -942,10 +1016,17 @@ public sugar Sugar {
 	          		, [VarDec(Id("_generator"))]
 	          	),
 	    		<desugar-family-generator> (familyname)
-	    	]
+	    		
+			]
 	    	)
-	    )
+	    )]
+	    , <desugar-family-sugar> (familyname,<family-super-list>super,virtualClasses)
+	    ]
+	    
+	 
+	
 	// Temporär:
+	
 	typeList:
    		("IntAlg") -> <strip-annos>[("Lit",["Integer"])]
    	typeList:

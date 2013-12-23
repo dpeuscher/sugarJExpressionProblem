@@ -1,6 +1,7 @@
 package sugarJExpressionProblem;
 
 import sugarJExpressionProblem.Sugar;
+import sugarJExpressionProblem.IntAlg;
 
 family IntAlgSub extends IntAlg {
 	virtual class Sub (IntAlgSub e1,IntAlgSub e2) {

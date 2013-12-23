@@ -1,6 +1,6 @@
 package expressionProblemTarget;
 
-public class IntAlgCount {
+public class IntAlgCounttest {
 	public interface Types <A> extends IntAlg.Types<A> {
 		public A lit(Integer x);
 	}

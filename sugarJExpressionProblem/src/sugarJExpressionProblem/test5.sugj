@@ -4,46 +4,60 @@ import org.sugarj.languages.Java;
 import concretesyntax.Java;
 import IntAlgSuper;
 
-public sugar IntAlgSub {
+public sugar IntAlgSubtest {
   rules
+	typeList:
+   		("IntAlg") -> <strip-annos>[("Lit",["Integer"])]
    	typeList:
-   		("IntAlgSub") -> <union><strip-annos>([("Sub",["Methods","Methods"]),("Lit",["Integer"])],<typeList>("IntAlg","Sub"))
+   		("IntAlgSub") -> <nub><strip-annos><concat>[[("Sub",["Methods","Methods"])],<typeList>("IntAlg")]
+   	typeList:
+   		("IntAlgCount") -> <union><strip-annos>([("Lit",["Integer"])],<typeList>("IntAlg"))
+   	typeListParents:
+   		("IntAlgSubCount") -> <union><strip-annos>(<typeList>("IntAlgSub"),<typeList>("IntAlgCount"))
+   	typeList:
+   		("IntAlgSubCount") -> <nub><strip-annos><concat>[[("Sub",["Methods","Methods"])],<typeListParents>("IntAlgSubCount")]
+   	methodList:
+   		("IntAlg") -> <strip-annos>([("print",["String"])])
    	methodList:
    		("IntAlgSub") -> <union><strip-annos>([("print",["String"])],<methodList>("IntAlg"))
-   	typeHead:
-   		("IntAlgSub","Sub") -> ((MethodDecHead(
+   	methodList:
+   		("IntAlgCount") -> <union><strip-annos>([("count",[])],<methodList>("IntAlg"))
+   	methodList:
+   		("IntAlgSubCount") -> <union><strip-annos>([("count",[])],<methodList>("IntAlgSub"),<methodList>("IntAlgCount"))
+	
+	typeHead:
+   		("Sub",["Methods","Methods"]) -> <read-from-string> "(MethodDecHead(
               [Public()]
             , None()
-            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
-            , Id(classname)
+            , ClassOrInterfaceType(TypeName(Id(\"Methods\")), None())
+            , Id(\"Sub\")
             , [Param(
-             				annot
-           					, ClassOrInterfaceType(TypeName(Id("Methods")), None())
-           					, Id("e1")
+             				[Final()]
+           					, ClassOrInterfaceType(TypeName(Id(\"Methods\")), None())
+           					, Id(\"e1\")
            				),
 				Param(
-	 				annot
-					, ClassOrInterfaceType(TypeName(Id("Methods")), None())
-					, Id("e2")
-				)] // <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
+	 				[Final()]
+					, ClassOrInterfaceType(TypeName(Id(\"Methods\")), None())
+					, Id(\"e2\")
+				)] 
             , None()
-            ),[ExprName(Id(e1)),ExprName(Id(e2))],"IntAlgSub")
-         )
+            ),[ExprName(Id(\"e1\")),ExprName(Id(\"e2\"))])"
     typeHead:
-   		("IntAlgSub","Lit") -> (MethodDecHead(
+   		("Lit",["Integer"]) -> (MethodDecHead(
               [Public()]
             , None()
-            , ClassOrInterfaceType(TypeName(Id(interfaceName)), None())
-            , Id(classname)
+            , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+            , Id("Lit")
             , [Param(
-             				annot
+             				[Final()]
            					, ClassOrInterfaceType(TypeName(Id("Integer")), None())
            					, Id("x")
            				)] // <virtual-params-to-interface-replace <+ virtual-params-to-interface> (virtualParams,familyname,familyname,[Final()])
             , None()
-            ),[ExprName(Id(x))],"IntAlg")
+            ),[ExprName(Id("x"))])
     methodHead:
-    	("IntAlgSub","print") -> (
+    	("print",["String"]) -> (
     		MethodDecHead(
               [Public()]
             , None()
@@ -57,5 +71,17 @@ public sugar IntAlgSub {
             , None()
             ),
             [ExprName(Id("prefix"))]
+    	)
+    methodHead:
+    	("count",[]) -> (
+    		MethodDecHead(
+              [Public()]
+            , None()
+            , ClassOrInterfaceType(TypeName(Id("Integer")), None())
+            , Id("count")
+            , []
+            , None()
+            ),
+            []
     	)
 }
