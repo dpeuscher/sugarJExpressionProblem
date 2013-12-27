@@ -1,10 +1,9 @@
-package sugarJExpressionProblem;
+package test;
 
 import org.sugarj.languages.Java;
 import concretesyntax.Java;
-import IntAlgSuper;
 
-public sugar IntAlgSubtest {
+public sugar test5 {
   rules
 	typeList:
    		("IntAlg") -> <strip-annos>[("Lit",["Integer"])]

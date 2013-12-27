@@ -1,7 +1,0 @@
-package sugarJExpressionProblem;
- 
-public sugar sugarTest {
-	rules
-    	lookupSuper:
-    		("familyname","abc") -> ()
-}

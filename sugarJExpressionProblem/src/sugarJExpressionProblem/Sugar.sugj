@@ -930,19 +930,6 @@ public sugar Sugar {
 	    
 	    desugar-family-sugar:
 	    	(familyname,super,virtualClasses) -> 
-	    	<concat>[
-/*		    	[TypeImportDec(
-			      TypeName(
-			        PackageOrTypeName(
-			          PackageOrTypeName(PackageOrTypeName(Id("org")), Id("sugarj"))
-			        , Id("languages")
-			        )
-			      , Id("Java")
-			      )
-			    )]
-			  , [TypeImportDec(TypeName(PackageOrTypeName(Id("concretesyntax")), Id("Java")))]
-			  , <family-sugar-import> <family-super-list> super
-			  ,*/ 
 			    [
 			    	ExtensionDec(
 			      ExtensionDecHead([Public()], Id(familyname))
@@ -950,30 +937,10 @@ public sugar Sugar {
 				    [ transformation-elem(
 			            Rules(
 			            	<concat> [
-			            		/*RDefNoArgs(
-                  "typeList"
-                , RuleNoCond(
-                    NoAnnoList(Tuple([NoAnnoList(Str("\"IntAlg\""))]))
-                  , App(
-                      CallNoArgs(SVar("strip-annos"))
-                    , NoAnnoList(
-                        List(
-                          [ NoAnnoList(
-                              Tuple(
-                                [NoAnnoList(Str("\"Lit\"")), NoAnnoList(List([NoAnnoList(Str("\"Integer\""))]))]
-                              )
-                            )
-                          ]
-                        )
-                      )
-                    )
-                  )
-                )*/
 							  <generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
 				              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList"),
 				              <generate-sugar-head> (familyname,<current-types-head> (virtualClasses,familyname),"typeHead"),
 							  <generate-sugar-head> (familyname,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead")
-				              
 				            ]
 				        )
 				      )
@@ -981,7 +948,6 @@ public sugar Sugar {
 			      )
 			    ) 
 			  ]
-			]
 			
 			
 			
@@ -1050,10 +1016,17 @@ public sugar Sugar {
 	    , <desugar-family-sugar> (familyname,<family-super-list>super,virtualClasses)
 	    ]
 	    
-	 
+	 typeList:
+	 	"" -> ""
+	 methodList:
+	 	"" -> ""
+	 typeHead:
+	 	"" -> ""
+	 methodHead:
+	 	"" -> ""
 	
 	// Temporär:
-	
+	/*
 	typeList:
    		("IntAlg") -> <strip-annos>[("Lit",["Integer"])]
    	typeList:
@@ -1130,7 +1103,7 @@ public sugar Sugar {
             , None()
             ),
             []
-    	)
+    	)*/
 }
 
 
