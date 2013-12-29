@@ -1,0 +1,126 @@
+\documentclass{report}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\begin{document}
+
+\chapter{Intro}
+
+\section{Abstract}
+
+
+The expression problem is a widely known difficulty in both functional and object-oriented programming because in any of them it requires the advantages of the other programming style. Solutions to this problem are in both styles very difficult to use and all of them have their own disadvantages. The approach of ...Extensibility for the masses... might be one of the best solutions up to now for the problem in OOD. This paper will use a derived idea of this approach and show a way how it can be used in a java environment that is intuitive for OOP users without needing to know the exact implementation of the solution. We will use the syntax of 
+...virtual classesfamily polymorphism... because it is easy to lern for anyone who knows OOP and it represents the demands of the users very neat. The transformation to the solution will be done with ...SugarJ... which generates native Java-Code, that anyone who does not use SugarJ can work with, so that everyone who understands the concept can use the solution. SugarJ is known for its acceptance of boilerplate code (in the desugared code) while hiding it for the user so the user can concentrate on the design, which is the main reason for syntax extension of any kind. We want to bring this great solution to programmers without the need to write and understand boilerplate code that might become erronous because of misunderstanding of the concept and to provide structure to data that it should genuinely have.
+
+
+\section{Introduction}
+
+\subsection{SugarJ}
+
+SugarJ is a framework to allow seamless integration of syntactic sugar into a development environment (IDE) like eclipse. It uses the Spoofax framework that makes it possible to have new syntax definitions just in time available in the using code. On that base, sugarJ uses SDF to define non-terminals into a language detection, that afterwards are transformed into aterms, that represent the whole code. After the parsing, SugarJ allows to use Stratego XT rules and strategies to manipulate the aterm tree and form valid code in the used language. This seems to be a perfect fit for our approach as we can define an own syntax to the problem, that in all ways defines the roles of the code in the problem. The SugarJ code will then use our syntax to execute the solution and generate the boilerplated code without the need of the user to know how. We will try to keep the depending background knowledge as low as possible.
+
+\subsection{The Expression Problem}
+
+The expression problem defines the lack of widely used languages in both, functional and OO languages, to allow extension of expressions in entity types as well as operations. Each of those is possible in either OO and functional languages. OO languages allow to extend given fixed structures by creating new entities that extend classes or implement interfaces of the fixed structures. Although one can create derived classes of existing ones and use them as if they were the original one, this solution has some drawbacks because this is sometimes not meant to be possible and therefore can be prevented with special tags (e.g. visibility, finally) or does simply not work (e.g. check for the exact class name). On the other hand in functional languages it is easy to add new functions but it needs much duplicated code which might be difficult if you only have the binary libraries and explicit copying of code to create new types.
+
+\subsection{Java}
+
+In our example we will choose the popular OO language Java and extend it with the possibility to add methods to existing objects. Java is the obvious choice because it is the main OO language that is being teached in universities and also is used in many commercial software products so the solution might help a wide range of users.
+
+\subsection{Extensibility For The Masses}
+
+The solution to the expression problem (...Extensibility for the masses...) is very convenient as it covers most of the prerequesites that the integration into the language syntax needs. The solution uses object algebras and replaces the classes of the expressions with methods in interfaces and constructors of the expression entities, that execute the methods while creating the expression tree. There are still a few features that are not covered or covered in a range that exceeds our needs so we have to derive from their work a solution that fits better. Our used solution differs in these features:
+
+- Statefulness: The ability to save the state in objects is a key reason to choose OOP in the first place. The given solution recreates a result of a method with the reconstruction of the tree every time, which obviously cannot work with a state of an object because there is no object that will be created.
+
+- Serialization: We want objects to be able to be exchanged. With the constructional approach we do not have objects that can be saved and need to know how they have been created to execute methods on them.
+
+- Intern method calls: In conventional classes it is possible to use methods within other methods for the sake of reduction of code repetition.
+
+- Ease of use: If you have never used with object algrabras it is not too easy to adapt the ways to use them. 
+
+\subsection{Cognitive Dimensions}
+
+To get a neat integration and a wide usage of the language extension we need to keep it simple to get into using it. Like other language extensions there are implicit decisions, that implement these dependencies but with ...cognitive dimensions... we have a way to figure out if our design meets the known patterns. Especially the consistency is a feature where we have to focus on. Most of the metrics are the reason, why we want to specialize the solution as a part of the language.
+
+
+ 
+\chapter{The Expression Problem}
+\section{Extensibility For The Masses}
+
+The solution to the expression problem, given by ...extensibility for the masses... defines a very neat approach in terms of OOP and therefore is a great base to use for our purposes for a simple syntax extension. The background knowledge that one needs to have to work or even collaborate with most solutions of the expression problem is a big hurdle. This obvious is by design because the OOP- as the functional approach are both not meant to support the features the expression problem needs. As the work points out most solutions for the problem lack of features to use it in work abroad science in real projects. The solution skips their named problems but adds some others, that became important and have to be solved to have a great implementation of it into a known environment with a low learning curve.
+
+
+In the example given on page 7 of the paper, the problem can be seen:
+
+\begin{lstlisting}[language=java]
+    <A> A make3Plus5(IntAlg<A> f) {        return f.add( f.lit(3), f.lit(5) );
+    }    void test() {        Exp e = make3Plus5(new IntFactory());
+    }
+\end{lstlisting}
+
+the user of an expression needs a method to regenerate the expression from scratch to use it. With the Exp-object itself you can only execute operations that the original class delivers, none of the operations that were added with the object algebras. 
+
+In another example the problem gets a little bit clearer (page 8f):
+
+\begin{lstlisting}[language=java]
+    <A> A exp(IntAlg<A> v) {        return v.add(v.lit(3), v.lit(4));
+    }
+    void test() {        IntFactory base = new IntFactory();        IntPrint print = new IntPrint();        int x = exp(base).eval(); // int x = exp.eval();
+￼￼        String s = exp(print).print();    }
+\end{lstlisting}
+
+the IntFactory generates the Exp-object where you can execute the native operations of the Exp-interface and you need to execute the constructors of the expression again for a new object with the added operation (print) of the object algebra "IntPrint". Also it is not possible to call native operations on the Exp-interface on the product of IntPrint.
+
+\section{Return Collection Objects Instead Of Results}
+
+To tolerate these downsides one and every collaborator would have to support this constructor-based method calls and the lack of serialization of objects. To get around this, the work itself gives a hint. On page 8 an interface is defined:
+
+\begin{lstlisting}[language=java]
+    interface IPrint {
+        String print();    }
+\end{lstlisting}
+
+Instead of returning a plain String for the print method, the object algebra returns an object of IPrint where a user can call the print-method by himself. So all we need is an object Algebra that returns an object with every method we expect the expression to have.
+
+\begin{lstlisting}[language=java]
+    public interface Methods { 
+        public String print();
+    }
+    public interface Methods2 extends Methods { 
+        public String count();
+    }
+\end{lstlisting}
+
+If we build an object algrabra that would return an object of Methods2 we could treat it as an abstract expression with our needed operations.
+
+\section{The Multi Purpose Object Algebra}
+
+To generate such aggregated objects we need an object algebra, that returns these. The algebra must know all types of expression implementations and the ability to recursively address them. Therefore an interface based on the given example would look like this:
+
+\begin{lstlisting}[language=java]
+    public interface Types<A> { 
+        public A lit(Integer x);
+    }
+\end{lstlisting}
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
