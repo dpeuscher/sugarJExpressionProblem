@@ -6,10 +6,9 @@ import concretesyntax.Java;
 public sugar Sugar {
 
   lexical syntax
-    "virtual" -> JavaKeyword
     "family" -> JavaKeyword
   lexical restrictions
-  	"virtual" "family" -/- [A-Za-z0-9\_\$] 
+  	"family" -/- [A-Za-z0-9\_\$] 
   sorts FamilyDecHead FamilyBody FamilySuper FamilyDec
   context-free syntax
     FamilyDec -> JavaTypeDec
@@ -21,7 +20,7 @@ public sugar Sugar {
     "extends" { FamilyClassId ","}+ -> FamilySuper {cons("FamilySuper")}
     VirtualClassDec -> FamilyBodyDec {cons("FamilyBodyDec")}
     VirtualClassDecHead JavaClassBody -> VirtualClassDec {cons("VirtualClassDec")}
-    "virtual" "class" FamilyVirtualClassId "(" {VirtualFormalParam ","}* ")" -> VirtualClassDecHead {cons("VirtualClassDecHead")}
+    "family" "class" FamilyVirtualClassId "(" {VirtualFormalParam ","}* ")" -> VirtualClassDecHead {cons("VirtualClassDecHead")}
     JavaID JavaVarDecId -> VirtualFormalParam {cons("VirtualFormalParam")} // always have to be final
     
   desugarings
@@ -380,7 +379,7 @@ public sugar Sugar {
 		    		)
 		    		
 		    		
-	// Generator-Class
+	// Algebra-Class
 		
 		
 		// Current Types:
@@ -626,7 +625,7 @@ public sugar Sugar {
 	                            , Invoke(
 	                                Method(
 	                                  Invoke(
-	                                    Method(MethodName(AmbName(Id(superClass)), Id("Generator")))
+	                                    Method(MethodName(AmbName(Id(superClass)), Id("Algebra")))
 	                                  , []
 	                                  )
 	                                , None()
@@ -783,7 +782,7 @@ public sugar Sugar {
 				ClassDec(
 		      ClassDecHead(
 		        [Public()]
-		      , Id("Generator")
+		      , Id("Algebra")
 		      , None()
 		      , None()
 		      , Some(
@@ -951,24 +950,24 @@ public sugar Sugar {
 			
 			
 			
-	// Generator static method:
-	    desugar-family-generator:
+	// Algebra static method:
+	    desugar-family-algebra:
 	    	(familyname) ->
 	    	MethodDec(
 	            MethodDecHead(
 	              [Public(), Static()]
 	            , None()
-	            , ClassOrInterfaceType(TypeName(Id("Generator")), None())
-	            , Id("Generator")
+	            , ClassOrInterfaceType(TypeName(Id("Algebra")), None())
+	            , Id("Algebra")
 	            , []
 	            , None()
 	            )
 	          , Block(
 	              [ If(
-	                  Eq(ExprName(Id("_generator")), Lit(Null()))
+	                  Eq(ExprName(Id("_algebra")), Lit(Null()))
 	                , ExprStm(
 	                    Assign(
-	                      ExprName(Id("_generator"))
+	                      ExprName(Id("_algebra"))
 	                    , QNewInstance(
 	                        NewInstance(
 	                          None()
@@ -977,7 +976,7 @@ public sugar Sugar {
 	                        , None()
 	                        )
 	                      , None()
-	                      , Id("Generator")
+	                      , Id("Algebra")
 	                      , None()
 	                      , []
 	                      , None()
@@ -985,7 +984,7 @@ public sugar Sugar {
 	                    )
 	                  )
 	                )
-	              , Return(Some(ExprName(Id("_generator"))))
+	              , Return(Some(ExprName(Id("_algebra"))))
 	              ]
 	            )
 	          )
@@ -1005,10 +1004,10 @@ public sugar Sugar {
 	    		<desugar-family-class> (familyname,super,virtualClasses),
 	    		FieldDec(
 	            	[Protected(), Static()]
-	         		, ClassOrInterfaceType(TypeName(Id("Generator")), None())
-	          		, [VarDec(Id("_generator"))]
+	         		, ClassOrInterfaceType(TypeName(Id("Algebra")), None())
+	          		, [VarDec(Id("_algebra"))]
 	          	),
-	    		<desugar-family-generator> (familyname)
+	    		<desugar-family-algebra> (familyname)
 	    		
 			]
 	    	)
