@@ -1,0 +1,11 @@
+package useCaseShapes;
+
+import sugarJExpressionProblem.Sugar;
+
+family ShapeSquare {
+    family class Square (Double x) {
+        public Double area () {
+            return x*x;
+        }
+    }
+}

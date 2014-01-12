@@ -1,0 +1,23 @@
+package useCaseShapes;
+
+import java.lang.Math;
+import sugarJExpressionProblem.Sugar;
+import useCaseShapes.ShapeSCircleTriangle;
+
+family ShapeSCTCircumLength extends ShapeSCircleTriangle {
+    family class Square (Double x) {
+        public Double circumferenceLength() {
+            return 4 * x;
+        }
+    }
+    family class Circle (Double r) {
+        public Double circumferenceLength() {
+            return 2 * Math.PI * r;
+        }
+    }
+    family class EquilateralTriangle (Double a) {
+        public Double circumferenceLength() {
+            return 3 * a;
+        }
+    }
+}

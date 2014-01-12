@@ -1,0 +1,17 @@
+package useCaseShapes;
+
+import java.lang.Math;
+import sugarJExpressionProblem.Sugar;
+import useCaseShapes.ShapeSCTEllipse;
+import useCaseShapes.ShapeSCTCircumLength;
+
+family ShapeSCTECircumLength
+        extends ShapeSCTEllipse, ShapeSCTCircumLength {
+    family class Ellipse (Double r1, Double r2) {
+        public Double circumferenceLength() {
+            return Math.PI * ( 3 * ( r1 + r2 ) - Math.sqrt(
+                    10 * r1 * r2 + 3 * ( r1 * r1 + r2 * r2 )
+                ) ); // Ramanujan approximation
+        }
+    }
+}

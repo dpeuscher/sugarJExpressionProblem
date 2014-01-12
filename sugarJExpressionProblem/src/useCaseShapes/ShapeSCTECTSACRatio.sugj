@@ -1,0 +1,36 @@
+package useCaseShapes;
+
+import java.lang.Math;
+import sugarJExpressionProblem.Sugar;
+import useCaseShapes.ShapeSCTECircumLength;
+import useCaseShapes.ShapeSCTTupleShapeCircumLength;
+
+family ShapeSCTECTSACRatio
+	extends ShapeSCTECircumLength,ShapeSCTTupleShapeCircumLength {
+    family class TupleShape (ShapeSCTECTSACRatio first,
+                      ShapeSCTECTSACRatio second) {
+        public Double areaCircumferenceRatio() {
+            return area()/circumferenceLength();
+        }
+    }
+    family class Ellipse (Double r1, Double r2) {
+        public Double areaCircumferenceRatio() {
+            return area()/circumferenceLength();
+        }
+    }
+    family class Square (Double x) {
+        public Double areaCircumferenceRatio() {
+            return x/4;
+        }
+    }
+    family class Circle (Double r) {
+        public Double areaCircumferenceRatio() {
+            return r/2;
+        }
+    }
+    family class EquilateralTriangle (Double a) {
+        public Double areaCircumferenceRatio() {
+            return Math.sqrt(3)/12 * a;
+        }
+    }
+}

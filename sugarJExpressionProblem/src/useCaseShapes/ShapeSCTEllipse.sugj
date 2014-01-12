@@ -1,0 +1,13 @@
+package useCaseShapes;
+
+import java.lang.Math;
+import sugarJExpressionProblem.Sugar;
+import useCaseShapes.ShapeSCircleTriangle;
+
+family ShapeSCTEllipse extends ShapeSCircleTriangle {
+    family class Ellipse (Double r1, Double r2) {
+        public Double area() {
+            return Math.PI * r1 * r2;
+        }
+    }
+}

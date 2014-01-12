@@ -1,0 +1,21 @@
+package useCaseShapes;
+
+import java.lang.Math;
+import sugarJExpressionProblem.Sugar;
+import useCaseShapes.ShapeSquare;
+
+family ShapeSCircleTriangle extends ShapeSquare {
+    family class Circle (Double r) {
+    	private Double _cachedArea;
+        public Double area () {
+        	if (_cachedArea == null)
+        		_cachedArea = Math.PI * r * r;
+            return _cachedArea;
+        }
+    }
+    family class EquilateralTriangle (Double a) {
+        public Double area () {
+            return Math.sqrt(3)/4 * a * a;
+        }
+    }
+}

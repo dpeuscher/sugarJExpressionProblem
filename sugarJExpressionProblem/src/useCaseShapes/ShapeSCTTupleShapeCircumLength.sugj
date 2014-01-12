@@ -1,0 +1,25 @@
+package useCaseShapes;
+
+import sugarJExpressionProblem.Sugar;
+import useCaseShapes.ShapeSCTCircumLength;
+
+family ShapeSCTTupleShapeCircumLength
+        extends ShapeSCTCircumLength {
+    family class TupleShape (ShapeSCTTupleShapeCircumLength first,
+                             ShapeSCTTupleShapeCircumLength second) {
+        private Double _areaCache;
+        private Double _circumferenceLengthCache;
+        public Double area () {
+        	if (_areaCache == null)
+            	_areaCache = first.area() + second.area();
+            return _areaCache;
+        }
+        public Double circumferenceLength() {
+        	if (_circumferenceLengthCache == null)
+            _circumferenceLengthCache =
+            	first.circumferenceLength()
+              + second.circumferenceLength();
+            return _circumferenceLengthCache;
+        }
+    }
+}
