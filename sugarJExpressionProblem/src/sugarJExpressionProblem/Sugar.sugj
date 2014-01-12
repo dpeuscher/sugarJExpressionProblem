@@ -293,37 +293,8 @@ public sugar Sugar {
 	   		
 	// Methods Interface:
 		// Submethods:
-		
-		
-		    function-search-methodnames-bodyparts:
-		    	[] -> []
-		    function-search-methodnames-bodyparts:
-		    	[FieldDec(field1,field2,field3) | rest] -> <function-search-methodnames-bodyparts> rest
-		    function-search-methodnames-bodyparts:
-		    	[MethodDec(
-		            MethodDecHead(
-		              annot
-		            , typeParams
-		            , result
-		            , Id(methodName)
-		            , params
-		            , throws
-		            )
-		          , body
-		          ) | rest] -> <union>([methodName],<function-search-methodnames-bodyparts> rest)
-		          
-		          
-		    function-search-methodnames:
-		    	[] -> []
-		    function-search-methodnames:
-		    	[FamilyBodyDec(
-			            VirtualClassDec(
-			              VirtualClassDecHead(FamilyVirtualClassId(classname),virtualParams)
-			            , ClassBody(body)
-			            )
-			          ) | rest] -> <union>(<function-search-methodnames-bodyparts> body,<function-search-methodnames> rest)
 			          
-			          
+
 			function-search-methods-bodyparts:
 		    	[] -> []
 		    function-search-methods-bodyparts:
@@ -349,8 +320,8 @@ public sugar Sugar {
 		        , throws
 		        ) 	
 		          ],<function-search-methods-bodyparts> rest]
-		          
-		          
+		    
+		    
 		    function-search-methods:
 		    	[] -> []
 		    function-search-methods:
@@ -375,7 +346,7 @@ public sugar Sugar {
 		     				, <family-super> (super,"Methods",None())
 		      			)
 		    			,
-		    		  	<function-search-methods> virtualClasses
+		    		  	<nub> <strip-annos> <function-search-methods> virtualClasses
 		    		)
 		    		
 		    		
@@ -400,7 +371,7 @@ public sugar Sugar {
 			current-methods-bodyparts:
 		    	([],search,replace) -> []
 		    current-methods-bodyparts:
-		    	([FieldDec(field1,field2,field3) | rest],search,replace) -> <current-methods-bodyparts> rest
+		    	([FieldDec(field1,field2,field3) | rest],search,replace) -> <current-methods-bodyparts> (rest,search,replace)
 		    current-methods-bodyparts:
 		    	([MethodDec(
 		            MethodDecHead(
@@ -556,6 +527,24 @@ public sugar Sugar {
 				(super,method,type) -> <find-super-method-reversed>(<reverse> super,method,type)
 
 
+			match-method:
+				MethodDec(
+		            MethodDecHead(
+		              annot
+		            , typeParams
+		            , result
+		            , Id(methodName)
+		            , params
+		            , throws
+		            )
+		          , body
+		          ) -> 1
+		          
+		          
+		    match-field:
+		    	FieldDec(field1,field2,field3) -> 1
+
+
 			method-impl:
 				([],familyname,super,[],methodsdone,type) ->
 				[]
@@ -605,13 +594,21 @@ public sugar Sugar {
 				[
 					method  | <method-impl> (rest,familyname,super,methods,[<get-method-signature>(method,familyname) | methodsdone],type)
 				]
+				where <match-method> method
+			method-impl:
+				([field | rest],familyname,super,methods,methodsdone,type) ->
+				[
+					field  | <method-impl> (rest,familyname,super,methods,methodsdone,type)
+				]
+				where <match-field> field
+
 				
 
 			derived-object:
 				([],type,typemethodParams) -> []
 			derived-object:
 				([superClass | super],type,typemethodParams) ->
-					[]
+					<derived-object> (super,type,typemethodParams)
 				where <not(elem)> (<strip-annos>type,<strip-annos><typeList>(superClass))
 			derived-object:
 				([superClass | super],type,typemethodParams) ->
@@ -796,14 +793,31 @@ public sugar Sugar {
 		        )
 		      )
 		    , ClassBody(
+		    	
+		    	/*// Debug:
+					[LocalVarDecStm(
+						LocalVarDec(
+						   []
+						 , ClassOrInterfaceType(TypeName(Id("String")), None())
+						  , [VarDec(Id("b"), Lit(String([Chars(<write-to-string><strip-annos>
+						  
+						  // Start
+						  <aggregate-types> <family-super-list> super
+						  // End
+						  
+						  )])))]
+					   )
+					 ) |
+					// Debug End*/
+		    	
 		        <typemethods> (familyname,super,virtualClasses,
 		        	<aggregate-types> <family-super-list> super,
 		        	<aggregate-methods> <family-super-list> super,
 		        	[]
 		        )
+				// ] // Debug
 		      )
 		    )
-	    
     
     // Generate sugar to import
     
@@ -874,7 +888,7 @@ public sugar Sugar {
                     )
                   )
                 )
-        
+
         
 	    generate-sugar-list:
 	    	(familyname,super,types,listname) ->
@@ -923,7 +937,7 @@ public sugar Sugar {
                   , App(CallNoArgs(SVar("read-from-string")), NoAnnoList(Str(<write-to-string><getFieldNumber>(head,1))))
                   )
                 )
-                //| <generate-sugar-head> (familyname,rest,listname) 
+                | <generate-sugar-head> (familyname,rest,listname) 
                 ]
 	    
 	    
