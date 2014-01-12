@@ -4,7 +4,7 @@ import sugarJExpressionProblem.Sugar;
 import sugarJExpressionProblem.IntAlg;
 
 family IntAlgCount extends IntAlg {
-	virtual class Lit (Integer x) {
+	family class Lit (Integer x) {
 		public Integer count () {
 			return new Integer(1);
 		}

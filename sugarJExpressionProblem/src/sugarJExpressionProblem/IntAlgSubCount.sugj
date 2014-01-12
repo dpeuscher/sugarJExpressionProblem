@@ -5,7 +5,7 @@ import sugarJExpressionProblem.IntAlgSub;
 import sugarJExpressionProblem.IntAlgCount;
 
 family IntAlgSubCount extends IntAlgSub,IntAlgCount {
-	virtual class Sub (IntAlgSubCount e1,IntAlgSubCount e2) {
+	family class Sub (IntAlgSubCount e1,IntAlgSubCount e2) {
 		public Integer count () {
 			return new Integer(e1.count() + e2.count());
 		}
