@@ -3,7 +3,7 @@
 \usepackage{listings}
 \usepackage{graphicx}
 \usepackage[affil-it]{authblk}
-\usepackage{color}
+\usepackage[usenames,dvipsnames]{color}
 \usepackage{float}
 \usepackage{wrapfig}
 
@@ -97,14 +97,6 @@ Extending a programming language (which is Java in this case) with new syntax is
 \emph{SugarJ} is a language extension framework that uses \emph{SDF}, \emph{Stratego} and the \emph{Spoofax framework} \cite{Kats-Spoofax-2010}. It can be used with \emph{integrated development environments} (IDE) to support syntax highlighting for the new syntax. The generated code does not depend on \emph{SugarJ} and so allows collaborative work across different environments. This thesis is also a case study, which outlines the experiences gained using SugarJ (a relatively young framework) to develop the syntax extension. I will also give the reader an impression of the time and effort required to use SugarJ.
 
 
-
-
-
-
-
-
-
-
 %%%%%%%%% Solution to the Expression Problem
 \chapter{Solution to the Expression Problem}
 
@@ -129,6 +121,7 @@ The requirements on a solution to the problem are proposed by Wadler and Zenger 
 
 %%%%%% Running Example
 \subsection{Running Example}
+\label{example}
 
 To clarify the problem and the solution we use an example that is used in much of the literature about the EP. The example consists of simple abstract mathematical expressions (e.g. 1 + 2) with two types: \emph{Literals} (in this case natural numbers: 1, 2, 3, ...) and the \emph{Add operation}. The base package\footnote{It is not mandatory a \emph{package}. We consider \emph{package} as editable entity} only consists of the lit-object with a print-method (Figure \ref{exampleLitBaseClass}).
 
@@ -403,13 +396,13 @@ class LitPrintCount {
 
 \subsection{Overview}
 
-Our Solution features a class that contains the \emph{object algebra interface}, the result class interface (\emph{aggregation interface}) and an implementation of the \emph{object algebra}. Surrounding code uses the \emph{object algebra interface} to factorize members of this family, that implement the \emph{aggregation interface}. The implementation of the factorization is the \emph{object algebra}, which can be exchanged.
+Our Solution features: a class that contains the \emph{object algebra interface}, the result class interface (\emph{aggregation interface}) and an implementation of the \emph{object algebra}. Surrounding code uses the \emph{object algebra interface} to factorize members of this family that implement the \emph{aggregation interface}. The implementation of the factorization is the \emph{object algebra}, which can be exchanged.
 
 \subsection{Aggregation Interface}
 
-We use \emph{object algebras} as a factory for classes with a collection of operations (\emph{aggregation classes}). Object algebras at Oliveira et. al. return a different result interface for every operation, instead our solution returns an aggregated interface with all operations (\emph{aggregation interface}) that are needed. This makes it possible for methods of the implementing classes to depend on each other and share state variables (see figure \ref{aggregationInterfaces}).
+We use \emph{object algebras} as a factory for classes with a collection of operations (\emph{aggregation classes}). This solution returns an aggregated interface with all operations that are needed, which is different from that proposed by Oliveira et. al. where the object algebras return a different result interface for every operation. This makes it possible for methods of the implementing classes to depend on each other and share state variables (see figure \ref{aggregationInterfaces}).
 
-The \emph{aggregation interface} defines all the operations the \emph{aggregation class} has, just like in general Java context. The surrounding code addresses just the \emph{aggregation interface}, there is no modification needed.
+The \emph{aggregation interface} defines all of the operations that the \emph{aggregation class} has, which is the same way that it is handled in general Java context. The surrounding code addresses just the \emph{aggregation interface} and there is no modification needed.
 
 \begin{figure}[h]
 \begin{lstlisting}[language=java]
@@ -426,7 +419,7 @@ The \emph{aggregation interface} defines all the operations the \emph{aggregatio
 
 \subsection{Object Algebra Interface}
 
-To generate objects based on the aggregation interface we need an object algebra, that factorizes these. This algebra needs a factory method for every type. Types are identified by their algebraic signature \cite{Oliv-Extensibility-2012}. This means, that every type is unique by its name and types of parameters. Parameters can either be abstract or concrete. Abstract parameters differ from concrete parameters so that they refer to the most specific interface in an extension hierarchy, which means the interface of the implementing object algebra. This is similar to the \emph{ThisType} extension proposed by Foster in \emph{Rupiah} \cite{Foster-Rupiah-2001}. The abstract parameter is referenced by a dynamic type parameter "A"\footnote{"A" is a convention. This only means it is dynamic mapped by the object algebra that implements the interface}. The return class of the factory methods also have the abstract type "A" as it represents the \emph{aggregation interface} (see figure \ref{algebraInterfaces}).
+In order to generate objects based on the aggregation interface we need an object algebra that factorizes them. This algebra needs a factory method for every type. Types are identified by their algebraic signature \cite{Oliv-Extensibility-2012}. This means that every type has unique name and parameter types. Parameters can either be abstract or concrete. Abstract parameters differ from concrete parameters in that they refer to the most specific interface in an extension hierarchy, which means the interface of the implementing object algebra. This is similar to the \emph{ThisType} extension proposed by Foster in \emph{Rupiah} \cite{Foster-Rupiah-2001}. The abstract parameter is referenced by a dynamic type parameter "A"\footnote{"A" is a convention. This only means it is dynamic mapped by the object algebra that implements the interface}. The return class of the factory methods also has the abstract type "A" as it represents the \emph{aggregation interface} (see figure \ref{algebraInterfaces}).
 
 \begin{figure}[h]
 \begin{lstlisting}[language=java]
@@ -443,9 +436,9 @@ To generate objects based on the aggregation interface we need an object algebra
 
 \subsection{Object Algebra}
 
-The main part of the object algebra is to instantiate the dependencies like super-classes of a called type and then instantiate the called type and make the dependencies available. The concrete implementations of the \emph{aggregation interface} are done using anonymous classes\footnote{Anonymous classes are desugared by the Java preprocessor into real classes with all available \emph{final} variables as private fields so they can be accessed within the anonymous class} within the object algebra methods (see figure \ref{algebraImplementation}). We use this technique to keep users from specifying concrete classes instead of interface in their code, because referencing super-types does not work with \emph{delegation} which we use for \emph{multiple inheritance}.
+The main part of the object algebra is to instantiate the dependencies like super-classes of a called type and then instantiate the called type and make the dependencies available. The concrete implementations of the \emph{aggregation interface} are done using anonymous classes\footnote{Anonymous classes are desugared by the Java preprocessor into real classes with all available \emph{final} variables as private fields so they can be accessed within the anonymous class} within the object algebra methods (see figure \ref{algebraImplementation}). This technique is employed to keep users from specifying concrete classes instead of interface in their code; because referencing super-types does not work with \emph{delegation} which is used use for \emph{multiple inheritance}.
 
-In figure \ref{algebraImplementation} in the Lit.print()-implementation we can either use \_instance2 or \_instance3 to delegate to. Coincidentally both refer to the same operation in our example but this can differ in another environment. To find the best ancestor for delegation one should use a linearization like suggested from Bracha \cite{Bracha-Mixin-1990} for Mixins.
+In figure \ref{algebraImplementation} in the Lit.print()-implementation we can either use \_instance2 or \_instance3 to delegate to. Coincidentally, both refer to the same operation in our example, but this can differ in another environment. To find the best ancestor for delegation one should use a linearization like that suggested by Bracha \cite{Bracha-Mixin-1990} for Mixins.
 
 \begin{figure}[H]
 \begin{lstlisting}[language=java]
@@ -482,11 +475,11 @@ public class Algebra4 implements Types <Methods2> {
 
 \subsection{Dynamic Dispatch}
 
-As Tempero et. al. point out, there are some limits to multiple inheritance with delegation \cite{Tempero-Multiple-2000}. We worked out a workaround\footnote{The workaround is available online \cite{Peuscher-GitHub-EP-2014}} for the limit of \emph{dynamic dispatch} for \emph{dependent methods} (called \emph{self-calls} at Tempero et. al.). It has some downsides (see section \ref{discussionDynamicDispatch}) but works as expected.
+As Tempero et. al. point out, there are some limits to multiple inheritance with delegation \cite{Tempero-Multiple-2000}. We developed a workaround\footnote{The workaround is available online \cite{Peuscher-GitHub-EP-2014}} for the limit of \emph{dynamic dispatch} for \emph{dependent methods} (called \emph{self-calls} by Tempero et. al.). It has some downsides (see section \ref{discussionDynamicDispatch}) but works as expected.
 
-The main idea of dynamic dispatch with delegation is to have a field of the original object in every delegation super-object. Therefore the original-object has to be injected into all classes.
+The main idea of dynamic dispatch with delegation is to have a field of the original object in every delegation super-object. Therefore, the original-object has to be injected into all classes.
 
-To achieve this we have to alter the aggregation interface. We add a setter with a generic type that extends from the according \lstinline{Methods} because we do not know the last extension at this point (see figure \ref{dynamicDispatchMethods}). The visible methods of this generic type are the same as the ones from the \lstinline{Methods} interface itself.
+To achieve this we have to alter the aggregation interface. We add a setter with a generic type that extends from the according \lstinline{Methods} (because we do not know the last extension at this point). The visible methods of this generic type are the same as the ones from the \lstinline{Methods} interface itself (see figure \ref{dynamicDispatchMethods}).
 
 \begin{figure}[H]
 \begin{lstlisting}[language=java]
@@ -503,19 +496,19 @@ public interface Methods2 extends Methods {
 \label{dynamicDispatchMethods}
 \end{figure}
 
-With every new Methods interface a new setter has to be introduced and therefore implemented. When called, Java decides to call the method with the best matching\footnote{\emph{best matching} means if an interfaces extends another interface and both could match on a method, the method with the extending class referenced is called} interface. Therefore the setter of every super interface has to be implemented although it will not be called. The correct setter injects the original object in every super object, which do the same with their predecessors etc. Within the factory method every instance publishes itself into the super objects so sub-objects overwrites their super objects and the original object overwrites all super objects.
+With every new Methods interface a new setter has to be introduced and implemented. When called, Java calls the method with the best matching\footnote{\emph{best matching} means if an interfaces extends another interface and both could match on a method, the method with the extending class referenced is called} interface. The setter of every super interface therefore, has to be implemented even though it will not be called. The correct setter injects the original object into every super object, which do the same with their predecessors etc. Within the factory method every instance publishes itself into the super objects so sub-objects overwrites their super objects and the original object overwrites all super objects.
 
-Dependent methods that call other methods of the calls just have to do their calls on the selfRef-object.
+Dependent methods that call other methods of the calls only have to do their calls on the selfRef-object.
 
 \subsection{Usage}
 \label{combiningTheParts}
-Just enumerate the interfaces and algebras would be very confusing. Therefore we suggest a form to define the interfaces and classes in a combined class (see figure \ref{combinedClass}).
+To just enumerate the interfaces and algebras would be very confusing. To overcome this we suggest a form that defines the interfaces and classes into a combined class (see figure \ref{combinedClass}).
 
-To address the interface of expressions of this family, one uses \lstinline{[Familyname].Methods}. The object algebra is available with singleton pattern. This is used because the family class is not stateful and for convenience and memory usage reasons. A user calls the singleton and gets the algebra of type \lstinline{[Familyname].Types<[Familyname].Methods>} that he uses for initialization of the expression.
+To address the interface of expressions of this family, one uses \lstinline{[Familyname].Methods}. The object algebra is available with a singleton pattern. This is used not only for convenience, but also because the family class is not stateful and to minimize memory usage. A user calls the singleton and gets the algebra of type \lstinline{[Familyname].Types<[Familyname].Methods>} that he uses for initialization of the expression.
 
 \subsubsection*{Extending Families}
 
-To extend this family the developer creates a new outer class and in there the \lstinline{Methods}- and \lstinline{Types<A>}-interface\footnote{In terms of consistency the interfaces should be extended even when empty} as well as the algebra and the singleton to return the algebra instance. The \lstinline{Methods}- and \lstinline{Types<A>}-interface implement all the \lstinline{Methods}- and \lstinline{Types<A>}-interfaces of the families that should be combined. The algebra implements the \lstinline{Types<Methods>}-interface and. New types are added in the \lstinline{Types<A>}-interface (and accordingly their implementation in the algebra). The \lstinline{Methods}-interface has the setSelfRef-method (see figure \ref{dynamicDispatchMethods}) and the newly added methods. The algebra has to implement every type and in every type every method of the \lstinline{Methods}- and \lstinline{Types<A>}-interface and either implement its own methods or delegate every method call (see figure \ref{dynamicDispatchAlgebra}). All types have to be implemented, their creation is not delegated. The references have to be modified from the previous examples to meet this structure (e.g. instead of Methods2: [Familyname].Methods, instead of new Algebra2(): [Familyname].algebra(), etc.).
+To extend this family the developer creates a new outer class in which the \lstinline{Methods}- and \lstinline{Types<A>}-interface\footnote{In terms of consistency the interfaces should be extended even when empty}, as well as the algebra and the singleton that returns the algebra, is located. The \lstinline{Methods}- and \lstinline{Types<A>}-interface implement all the \lstinline{Methods}- and \lstinline{Types<A>}-interfaces of the families that are to be combined. The algebra implements the \lstinline{Types<Methods>}-interface and. New types are added in the \lstinline{Types<A>}-interface (and accordingly their implementation in the algebra). The \lstinline{Methods}-interface has the setSelfRef-method (see figure \ref{dynamicDispatchMethods}) and the newly added methods. The algebra has to implement every type and in every type every method of the \lstinline{Methods}- and \lstinline{Types<A>}-interface and either implement its own methods or delegate every method call (see figure \ref{dynamicDispatchAlgebra}). All types have to be implemented, their creation is not delegated. The references have to be modified from the previous examples to meet this structure (e.g. instead of Methods2: [Familyname].Methods, instead of new Algebra2(): [Familyname].algebra(), etc.).
 
 \begin{figure}[H]
 \begin{lstlisting}[language=java]
@@ -583,7 +576,7 @@ public class Algebra4 implements Types2<Methods2> {
     { /* ... */ }
 }
 \end{lstlisting}
-\caption{Dynamic dispatch: \emph{Original object setter} implementation and application of the original object on super-objects. Compare to figure \ref{algebraImplementation}. \emph{Add} is omitted for clarity reasons.}
+\caption{Dynamic dispatch: \emph{Original object setter} implementation and application of the original object on super-objects. Compare to figure \ref{algebraImplementation}. Note that \emph{Add} has been omitted for clarity reasons.}
 \label{dynamicDispatchAlgebra}
 \end{figure}
 
@@ -591,59 +584,133 @@ public class Algebra4 implements Types2<Methods2> {
 
 \subsection{Related work}
 
-There are plenty of solutions to the Expression Problem in literature. These can be splittet up into solutions with syntax extensions and those without. In this section we will compare our work on the Expression Problem with solutions that do not rely on syntax extensions.
+There are plenty of solutions to the Expression Problem in literature. These can be divided into two groups: solutions that rely on syntax extensions and solutions that do not rely on syntax extensions. In this section we will compare our work on the Expression Problem with solutions that do not rely on syntax extensions.
 
-\subsubsection*{The Expression Problem Revisited\cite{Torgersen-Expression-2004}}
+\subsubsection*{The Expression Problem Revisited}
 
-Torgersens definition of a valid solution is less restrictive. It allows for code to be recompiled but not changed and allows casting under the condition that every combination has to be handled. The restrictions by Wadler \cite{Wadler-Expression-1998} do not allow solutions to depend on recompilation and force a solution to use static type safety. Although loosen the restriction for recompiling code, every of his solutions meets the strict requirement of Wadler for recompiling code so we consider it met. We will only compare the first solution because it has a very similar structure as ours. The comparison to the other 3 solutions is done by Torgersen in his paper.
+\emph{The Expression Problem Revisited} is a paper about a solution to the EP by Torgersen published in 2004 \cite{Torgersen-Expression-2004}.
+Torgersen's definition of a valid solution is less restrictive. It allows for code to be recompiled but not changed and allows casting under the condition that every combination has to be handled. The restrictions proposed by Wadler \cite{Wadler-Expression-1998} do not allow solutions to depend on recompilation and they force solutions to use static type safety. So, although the restrictions for recompiling code are looser, everyone of Torgersen's solutions meet the strict requirements of Wadler for recompiling code and therefore, we consider the requirements met. We will only compare the first solution because it has a very similar structure to ours. The comparison to the other 3 solutions has been presented by Torgersen in his paper.
 
-His first approach is (as ours) \emph{data-centered} which means the structure from which the extensions are derived are types. It uses type parameters to make sure that the constructors are called with the correct (sub-)type. Extension of classes is similar to generic sub-typing except for the type parameter that has to be transferred. To eliminate F-Bounds another sub-type without type parameters is needed. An abstract factory is used to generate types of the correct family.
+Torgersen's first approach is (as is ours) \emph{data-centered}, which means the structure, from where the extensions are derived, are types. It uses type parameters to make sure that the constructors are called with the correct (sub-)type. Extension of classes is similar to generic sub-typing except in the case of the type parameter, which has to be transferred. To eliminate F-Bounds another sub-type without type parameters is needed. This is done by using an abstract factory to generate types of the correct family.
 
-The difference to our approach is mostly the inheritance. Our approach features independent extension that which we made possible using delegation. Therefore we do not need type parameters in our \lstinline{Methods}-interface. Also we do not need the F-Bounds free subtype as our types are already F-Bound free. Instantiation with abstract factories (object algebras) is generally handled the same way.
+The difference between Torgersen's and our approach is mostly the inheritance. Our approach features independent extension, which we made possible by using delegation. The result is that we do not need type parameters in our \lstinline{Methods}-interface. Also we do not need the F-Bounds free subtype as our types are already F-Bound free. Instantiation with abstract factories (object algebras) is generally handled in the same way.
 
-Torgersens solution is like ours but with simple inheritance instead of multiple inheritance.
-Instead of Torgersens, our solution uses delegation for inheritance. We overcame the \emph{dynamic binding} problem but it comes with some downsides (see \emph{discussionDynamicDispatch}) whereas the solution of Torgersens uses Java inheritance which does not have those problems.
+Torgersen's solution is similar to ours but with simple inheritance instead of multiple inheritance.
+Unlike Torgersens, our solution uses delegation for inheritance, which unfortunatly does not support \emph{dynamic binding}. We overcame the \emph{dynamic binding} problem but it comes with some downsides (see section \ref{discussionDynamicDispatch}) whereas the solution by Torgersen uses Java inheritance which does not have these problems.
 
-\subsubsection*{Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract\cite{Bruce-Typing-2003}}
+\subsubsection*{Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract}
 
-Bruce's solution depends on a Java language extension named "Rupiah"\cite{Foster-Rupiah-2001}. The extension supports a concept called \emph{ThisType} that adds a dynamic type to every class. This type is comparable to the dynamic field "this" and describes the type of an instantiated object. With \emph{ThisType} a super-class is able to reference the type of a derived sub-class. This solves the problem that we used object algebras for. Unfortunately it is not part of Java at the moment.
+{Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract} is a paper about an extended Java language that solves the EP among other things by Bruce published in 2003\cite{Bruce-Typing-2003}.
+Bruce's solution depends on a Java language extension named "Rupiah"\cite{Foster-Rupiah-2001}. The extension supports a concept called \emph{ThisType}, which adds a dynamic type to every class. This type is comparable to the dynamic field "this" and describes the type of an instantiated object. With \emph{ThisType}, a super-class is able to reference the type of a derived sub-class, which solves the problem of \emph{abstract types} that object algebras were used to solve. Unfortunately ThisType or something similar has not yet been included in Java.
 
 \subsection{Delegation}
-We used delegation to support the requirement of \emph{independent extensibility} \cite{Odersky-Expression-2005, Oliv-Extensibility-2012}. The solution of Oliveira et. al. supports some kind of independent extensibility which was kind of difficult to implement. It also is not very easy to be generated because the needed background-knowledge on the implementation needs to be used in the generation process. Also the use of this solution is very inconvenient for the surrounding code. Another point that kept us from using a solution like the one from Oliveira et. al. is that they do not fully support depending methods. We worked out a solution how they could work and found it to be even more difficult to generate than the independent extensibility.
+We used delegation to support the requirement of \emph{independent extensibility} \cite{Odersky-Expression-2005, Oliv-Extensibility-2012}. The solution of Oliveira et. al. supports some kind of independent extensibility, but there were some difficulties in its implementation. Also it is not very easily generated because the needed background-knowledge of the implementation needs to be used in the generation process. Also the use of this solution is very inconvenient for the surrounding code. Another point that kept us from using a solution like the one from Oliveira et. al. is that it does not fully support depending methods. We worked out a solution how they could work and found it to be even more difficult to generate than the independent extensibility.
 
-Delegation comes with some overhead of memory usage, instantiation speed and usage speed as instead of one object with inherited methods, for every inheritance is at least another object that has to be kept in memory. This can be a problem in very complex inheritance trees. Also because operations are delegated through the inheritance tree, the execution of them is slightly slower.
+Delegation comes with some overhead in memory usage, instantiation speed and usage speed. This is because for every inheritance there has to be at least another object that is to be kept in memory. This can be a problem in very complex inheritance trees. Also, because operations are delegated through the inheritance tree, the execution of them is slightly slower.
 
-On the other hand delegation gives us the possibility to extend types independently and support multiple inheritance. Also with our solution to dynamic dispatch for delegation, many of the problems delegation brings, are erased.
+On the other hand, delegation gives us the possibility to extend types independently and support multiple inheritance. Also, with our solution to dynamic dispatch for delegation, many of the problems delegation brings, are erased.
 
 \subsection{Dynamic Dispatch}
 \label{discussionDynamicDispatch}
 
+When not used properly \emph{delegation} does not work exactly like inheritance. We tried to adapt the \emph{dynamic dispatch} of inheritance to delegation. It works as one would expect inheritance to work. Therefore intern method calls have to be done on an extra fields instead of the current namespace or with the \lstinline{this}-reference. With this workaround we are able to use \emph{multiple inheritance}-like extension in Java.
+
 Our solution to dynamic dispatch for delegation has some downsides that one should keep in mind when using it.
 \begin{itemize}
-  \item \emph{Boilerplate code}: It increases the boilerplate code very much. This depends on the structure and entities. In our example the whole code was increased by about 45\%. But as we want to generate the code anyway this is not that much of a problem.
-  \item \emph{Performance}: In complex extension combinations the instantiation could take more time. Also it will take up some more memory. As we are just copying references this will not have too much of an impact on both memory time and speed.
+  \item \emph{Boilerplate code}: It increases the boilerplate code very much. This depends on the structure and entities. In our example the whole code was increased by about 45\%, but as we want to generate the code anyway this is not that much of a problem.
+  \item \emph{Performance}: In complex extension combinations the instantiation could take more time and more memory. However, as the solution just copies references this will not have too much of an impact on both memory time and speed.
   \item \emph{Security}: Our main idea to overcome the missing \emph{dynamic dispatch} is to set the main object into every super class. We cannot use visibility to limit the external access because the algebra would not have access to set it in the first place.
-  \item \emph{Convenience}: The access to the dependent methods have to be executed on a instance field instead implicitly by calling the namespace-method. Also when providing self-reference (e.g. when implementing Observer pattern\cite{Gof-Design-1993}) it has to be done with the same field. We might can overcome this with desugaring.
+  \item \emph{Convenience}: The access to the dependent methods have to be executed on a instance field instead of implicitly by calling the namespace-method. Also, when providing self-reference (e.g. when implementing Observer pattern\cite{Gof-Design-1993}) it has to be done with the same field. This might be overcome with desugaring.
   \item \emph{Nullpointer safety}: The solution is static type safe. It is not safe from nullpointer exceptions. Although it is just a theoretical problem, the sequence of initialization has some states where the dynamic dispatch field is \lstinline{null} and would therefore raise an exception. This could become a problem if the selfRef is overwritten with \lstinline{null}, as discussed before at the "Security"-point.
 \end{itemize}
 
 
 
-
 \chapter{Syntax Extension For The Solution}
 
+\section{Introduction}
 
-%%%%%%%%%%%%%% Hier ist nicht der richtige Ort dafür
+We will develop a SugarJ library that features a syntax extension for the solution to the \emph{Expression Problem} we developed in the previous chapter. With this work we will provide an experience report on working with SugarJ to develop libraries that provide domain specific languages \cite{Erdweg-SugarJ-2011}. The solution should meet the requirements, that users have on languages generally. Therefore we compare the syntax with different applicable \emph{Cognitive Dimensions} \cite{Green-Cognitive-1996}.
 
-\section{SugarJ}
+The solution to the Expression Problem from the previous chapter is a great fit for this purpose because is developed with the intend to generate most parts of the code. The syntactical structure will look like
 
-SugarJ \cite{Erdweg-SugarJ-2011} is a framework which allows seamless integration of syntactic sugar into an IDE like Eclipse. It uses the Spoofax framework which makes new syntax definitions just in time available in the editor. SugarJ uses syntax definition formalism (SDF) \cite{Heering-SDF-1989} to provide new non-terminals and keywords for language detection. SugarJ then uses Stratego/XT\cite{Kats-Spoofax-2010} rules and strategies to manipulate the generated aterm tree and export valid code written in Java.
+With SugarJ it is possible to define these syntax extensions and integrate them into an IDE. SugarJ is a very young framework. Therefore most of the work in literature yet is written by the authors of SugarJ and is about extending, describing possible use cases and working on the framework \cite{Fehrenbach-Retrofitting-2011, Erdweg-Composition-2012, Erdweg-Editor-2011, Erdweg-SugarHaskell-2012, Erdweg-Questionnaire-2013}. We want to provide a view on a special use case from an unaffiliated user from learning the concepts to implementing a working library.
 
-We chose this framework because it fits our needs and comes with integrated support for IDEs. 
 
-\section{Cognitive Dimensions}
+\section{Methods}
 
-To get a neat integration and a wide usage of the language extension we need to keep it simple. Like other language extensions there are implicit decisions, that meet the requirements of a language syntax but with cognitive dimensions \cite{Green-Cognitive-1996} we have a way to figure out if our design meets the known patterns. Especially consistency is a feature where we have to focus on. Most of the metrics are the reason why we want to extend languages with a specialized domain syntax.
+\subsection{SugarJ}
+
+SugarJ is a framework which allows seamless integration of syntactic sugar for Java into an IDE like Eclipse \cite{Erdweg-SugarJ-2011}. It uses the \emph{Spoofax framework} which makes new syntax definitions just in time available in the editor. SugarJ uses syntax definition formalism (SDF) to provide new non-terminals and keywords for language detection \cite{Heering-SDF-1989}. It then uses Stratego/XT rules and strategies to manipulate the generated ATerm tree and export valid code in Java \cite{Kats-Spoofax-2010, Brand-ATerms-2000}.
+
+SugarJ uses SDF a formalism to define syntax (see example in figure \ref{exampleSDFJavaClassDecHead}). There is already a SDF of Java language available in the SugarJ repository where one can lookup design and structure of the language and find information about how to derive his own language extensions \cite{Heering-SDF-1989, Brand-SDF-2007, Java-SDF-2014}. With this definition an IDE that supports the Spoofax framework is able to parse, verify and syntax highlight code, that is written in this new syntax.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=java,breaklines=false]
+( Anno | ClassMod )* "class" Id TypeParams? Super? 
+    Interfaces? -> ClassDecHead {cons("ClassDecHead")}}.
+\end{lstlisting}
+\caption{Example of the Java class head with \emph{SDF}}
+\label{exampleSDFJavaClassDecHead}
+\end{figure}
+
+In the second step, SugarJ uses Stratego/XT to take the ATerm (tree representation of a whole syntax representation in SDF) of a language and transform it with various rules to remove every non-terminal that might be added by the previous SDF by rewriting parts of the ATerm \cite{Stratego-Manual, Kats-Spoofax-2010, Brand-ATerms-2000, Visser-Stratego-2003}.
+
+\begin{figure}[H]
+\begin{lstlisting}[breaklines=false,morekeywords={field1,field2,field3,annot,typeParams,result,methodName,params,throws,body,rest},keywordstyle=\bfseries\color{OliveGreen}]
+function-search-methods-bodyparts:
+  [] -> []
+function-search-methods-bodyparts:
+  [FieldDec(field1,field2,field3) | rest]
+    -> <function-search-methods-bodyparts> rest
+function-search-methods-bodyparts:
+  [MethodDec(MethodDecHead(annot,typeParams,result,
+      Id(methodName),params,throws),body) | rest]
+    -> <concat>[[
+		   AbstractMethodDec(annot,typeParams,result,
+		     Id(methodName),params,throws)
+		          ],
+		          <function-search-methods-bodyparts> rest]
+\end{lstlisting}
+\caption{Example of a \emph{Stratego/XT} rule that searches and replaces methods by according abstract methods and removes fields to generate the contents of an interface from a class}
+\label{exampleStrategoClassInterfaceTranslation}
+\end{figure}
+
+
+SugarJ uses these two technologies in combination with the Spoofax framework to define new domain languages (SDF), that an IDE can use to utilize (Spoofax), and afterwards transform into valid code in Java\footnote{There are also frameworks like SugarJ for \emph{Haskell} (SugarHaskell) and \emph{Prolog} (SugarProlog)} (Stratego). This process is called \emph{Desugaring}, because syntactical sugar that one matches with a language extension via SDF is transformed from generic code to another language, that assigns the idea of the domain language into it.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Algebraic Signature}
+
+An \emph{algebraic signature} is the structures of a type, its parameters and return type independent to a specific family of expressions where it is defined \cite{Oliv-Extensibility-2012}. In the example in section \ref{example} the signature of "Lit" is \lstinline{Lit: Integer -> Methods} and the signature of "Add" is \lstinline{Add: Methods x Methods -> Methods}. The algebraic signature of a type is the same among family inheritances, although the \lstinline{Methods}-type is abstract so it is adapted to the interface of the according family.
+
+\subsection{Cognitive Dimensions}
+
+To get a neat integration and a wide usage of a language extension one needs to check for integration features with the existing language. To not rely on implicit decisions when defining a new language extension we have a way to figure out if our design meets the known patterns called \emph{cognitive dimensions} \cite{Green-Cognitive-1996}. Especially \emph{consistency} is a feature where we have to focus on. Most of the metrics are the reason why we want to extend languages with a specialized domain syntax.
+
+
+\subsubsection*{The \emph{Consistency} Metric}
+
+The consistency of a language describes if someone who learnt part of a language, could easily adapt other features of this language. For syntax extensions that extend a complete language with syntactical sugar it is very important to keep that in mind in their implementation. The main goal of syntax extensions is to simplify features, that would otherwise be difficult to implement.
+
+The Interface family meets this requirement, because it consists of classes that have mostly the same syntax and features as every other class a user would write. The context of an interface family has the same symbols as an interface would have. The binding of the classes in the family to the interface name communicates the outer interface to be met by the inner classes.
+
+Because multiple inheritance is not part of Java, a given algorithm to delegate derived calls to the super objects is not forced. The reversed extend-order does not violate this rule.
+
+\subsubsection*{The \emph{Viscosity} Metric}
+
+The viscosity of a language describes the effort that is required to perform a single change. As long as it does not conflict with the readability of the code, the lower the effort, the better this condition is met.
+
+In the interface family syntax, the effort for a change is very low. Because every method that is added to a class will extend the interface and every type that is defined in the interface family will implement the interface. It does not have to be updated explicitly. To extend a class, one simply has to define it, without the need to know if it was already derived from a previous interface family and if, which methods have to be derived.
+
+\subsubsection*{The \emph{Progressive Evaluation} Metric}
+
+Progressive evaluation describes if a developer gets feedback in a partially-complete program.
+
+Our draft does not support this requirement yet, because of the need of static type checks. But it would be possible in a future implementation to allow methods that have not been implemented in a type to throw an exception. Now the compiler would fail on a missing method.
+
+
 
 %%%%%%%%%%%%%% / Hier ist nicht der richtige Ort dafür
 
@@ -670,38 +737,24 @@ family IntAddCount extends IntAdd,IntCount {
     }
 }
 \end{lstlisting}
-\label{thirdExtensionFamily}
 \caption{The third extension as family}
+\label{thirdExtensionFamily}
 \end{figure}
 
 \section{Strip Boilerplate Code}
 
 The delegation code can mostly be generated. To do this, we only need the information about the super-families. This information includes which families inherit and in which order they inherits. Also the anonymous classes, the interfaces and the object algebra interfaces can be generated. The goal is to keep the new syntax as simple as possible and extensive as necessarily.
 
+\subsection{algebraic signature}
 \label{albegraicSignature}
-An algebraic signature\cite{Oliv-Extensibility-2012} is the structures of a type, its parameters and return type independent to at specific family where it is defined. In the example the signature of "Lit" is \lstinline{Lit: Integer -> Methods} and the signature of "Add" is \lstinline{Add: Methods x Methods -> Methods}. The algebraic signature of a type is the same among family inheritances, although the "Methods"-type is abstract so it is adapted to the interface of the according family. The parameters in a type-declaration are static values. Methods of the class are able to access them readable.
 
-\section{Cognitive Dimensions}
+%% Bearbeitet
 
-\subsection{The \emph{Consistency} Metric}
+Java supports the use of type parameters. Algebraic signatures\ref{albegraicSignature} do not know this concept. The family name as sign for the abstract type (see \ref{familyDependendType}) is only applied to plain type names and not to type parameters of Java.
 
-The consistency of a language describes if someone who learnt part of a language, could easily adapt other features of this language. For syntax extensions that extend a complete language with syntactical sugar it is very important to keep that in mind in their implementation. The main goal of syntax extensions is to simplify features, that would otherwise be difficult to implement.
+The parameters in a type-declaration are static values. Methods of the class are able to access them readable.
 
-The Interface family meets this requirement, because it consists of classes that have mostly the same syntax and features as every other class a user would write. The context of an interface family has the same symbols as an interface would have. The binding of the classes in the family to the interface name communicates the outer interface to be met by the inner classes.
-
-Because multiple inheritance is not part of Java, a given algorithm to delegate derived calls to the super objects is not forced. The reversed extend-order does not violate this rule.
-
-\subsection{Viscosity}
-
-The viscosity of a language describes the effort that is required to perform a single change. As long as it does not conflict with the readability of the code, the lower the effort, the better this condition is met.
-
-In the interface family syntax, the effort for a change is very low. Because every method that is added to a class will extend the interface and every type that is defined in the interface family will implement the interface. It does not have to be updated explicitly. To extend a class, one simply has to define it, without the need to know if it was already derived from a previous interface family and if, which methods have to be derived.
-
-\subsection{Progressive Evaluation}
-
-Progressive evaluation describes if a developer gets feedback in a partially-complete program.
-
-Our draft does not support this requirement yet, because of the need of static type checks. But it would be possible in a future implementation to allow methods that have not been implemented in a type to throw an exception. Now the compiler would fail on a missing method.
+%% / Bearbeitet
 
 \section{Limitations}
 \label{syntaxExtensionLimitations}
@@ -749,23 +802,6 @@ With the keyword "super" one is able to access fields an methods in the scope of
 
 \chapter{Desugaring With SugarJ}
 \label{sugarJChapter}
-
-\section{SugarJ}
-We want to use SugarJ \cite{Erdweg-SugarJ-2011} to inject the defined syntax extension to an IDE that supports such syntax extensions. SugarJ uses Spoofax a framework to dynamically load new syntax definitions into IDEs to work with new (derived) languages \cite{Kats-Spoofax-2010}.
-
-\subsection{SDF}
-SugarJ uses SDF \cite{Heering-SDF-1989, Brand-SDF-2007} a formalism to define syntax. There is already a SDF of Java language available in the SugarJ repository \cite{Java-SDF-2014} where one can lookup design and structure of the language and find information about how to derive his own language extensions. With this definition an IDE that supports the Spoofax framework (like Eclipse) is able to parse, verify and syntax highlight code, that is written in this new syntax.
-
-\subsection{Stratego/XT}
-% Check of das stimmt:
-In the second step, SugarJ uses Stratego/XT (\cite{Stratego-Manual, Kats-Spoofax-2010}) to take the aterm (tree representation of a whole syntax representation in SDF) of a language and transform it with various rules to remove every non-terminal that might be added by the previous SDF by rewriting parts of the aterm.
-
-\subsection{Desugaring}
-These two technologies in combination with the Spoofax framework can be used to define new domain languages (SDF), that an IDE can use to utilize (Spoofax), and afterwards transform into valid code in an existing language (Stratego). This process is called \emph{Desugaring}, because syntactical sugar that one would match with a language extension via SDF is transformed in the generic code in another language, that assigns the idea of the domain language into it.
-
-\subsection{Address Abstract Types in Type Parameters}
-
-Java supports the use of type parameters. Algebraic signatures\ref{albegraicSignature} do not know this concept. The family name as sign for the abstract type (see \ref{familyDependendType}) is only applied to plain type names and not to type parameters of Java.
 
 \section{Experience with SugarJ}
 In this section we describe our subjective view on the development-process with SugarJ.
