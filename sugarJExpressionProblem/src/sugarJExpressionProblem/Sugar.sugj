@@ -115,7 +115,14 @@ public sugar Sugar {
 		    	([Param([],ClassOrInterfaceType(TypeName(Id(type)), None())
                  , Id(varname)) | rest],search,replace) -> 
 		    		[type | <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
-		    		
+/*		    params-to-signature:
+		    	([Param([],ClassOrInterfaceType(TypeName(Id(type)), Some(TypeArgs(typeArgs)))
+                 , Id(varname)) | rest],search,replace) -> 
+		    		[<concat-strings>(type,"<",<concat-strings>
+		    				<params-to-signature-replace <+ params-to-signature> (typeArgs,search,replace)
+						,">")
+		    			| <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
+*/		    		
 		    		
 		    params-to-signature-replace:
 		    	([],search,replace) -> []
@@ -124,7 +131,15 @@ public sugar Sugar {
                  , Id(varname)) | rest],search,replace) -> 
 		    		[replace | <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
 		           				where <structurally-equal> (type,search)
-
+/*		    params-to-signature-replace:
+		    	([Param([],ClassOrInterfaceType(TypeName(Id(type)), Some(TypeArgs(typeArgs)))
+                 , Id(varname)) | rest],search,replace) -> 
+		    		[<concat-strings>(replace,"<",<concat-strings>
+		    				<params-to-signature-replace <+ params-to-signature> (typeArgs,search,replace)
+						,">")
+		    			| <params-to-signature-replace <+ params-to-signature> (rest,search,replace)]
+		           				where <structurally-equal> (type,search)
+*/
 		    		
 			params-to-constructor:
 		    	[] -> []
@@ -132,29 +147,7 @@ public sugar Sugar {
 		    	[param | rest] -> 
 		    	[ExprName(Id(<param-get-varname>param)) | <params-to-constructor> rest]
 
-		           				
-		    paramlist-to-params:
-		    	[] -> []
-		    paramlist-to-params:
-		    	([],nr) -> []
-		    paramlist-to-params:
-		    	([param | rest],nr) ->
-		    	[Param([],ClassOrInterfaceType(TypeName(Id(param)),None())
-		    		,Id(<conc-strings>("param",<int-to-string>nr))) | <paramlist-to-params> (rest,<inc>nr)]
-		    paramlist-to-params:
-		    	[param | rest] -> <paramlist-to-params> ([param | rest],1)
-		    	
-		    
-		    paramlist-to-constructor:
-		    	[] -> []
-		    paramlist-to-constructor:
-		    	([],nr) -> []
-		    paramlist-to-constructor:
-		    	([param | rest],nr) ->
-		    	[ExprName(Id(<conc-strings>("param",<int-to-string>nr))) | <paramlist-to-constructor> (rest,<inc>nr)]
-		    paramlist-to-constructor:
-		    	[param | rest] -> <paramlist-to-constructor> ([param | rest],1)
-		   		           				
+		           						   		           				
 
   	// Virtual Params:
   	
@@ -346,7 +339,30 @@ public sugar Sugar {
 		     				, <family-super> (super,"Methods",None())
 		      			)
 		    			,
-		    		  	<nub> <strip-annos> <function-search-methods> virtualClasses
+		    			<concat>
+		    		  		[<nub> <strip-annos> <function-search-methods> virtualClasses,
+				             [AbstractMethodDec(
+				                [Public()]
+				              , Some(
+				                  TypeParams(
+				                    [ TypeParam(
+				                        Id("B")
+				                      , Some(TypeBound([ClassOrInterfaceType(TypeName(Id("Methods")), None())]))
+				                      )
+				                    ]
+				                  )
+				                )
+				              , Void()
+				              , Id("setSelfRef")
+				              , [Param(
+				                   []
+				                 , ClassOrInterfaceType(TypeName(Id("B")), None())
+				                 , Id("selfRef")
+				                 )]
+				              , None()
+				              )
+				         ]]
+
 		    		)
 		    		
 		    		
@@ -545,6 +561,33 @@ public sugar Sugar {
 		    	FieldDec(field1,field2,field3) -> 1
 
 
+			signatures-get-name:
+				[] -> []
+			signatures-get-name:
+				[(signname,params) | rest] ->
+					[signname | <signatures-get-name> rest]
+
+
+			find-all-method-names:
+				[] -> []
+			find-all-method-names:
+				[super | rest] ->
+					<nub> <concat> [<signatures-get-name><methodList>super,<find-all-method-names>rest]
+
+
+			method-code-replacements:
+				Method(MethodName(Id(methodName))) ->
+				Method(MethodName(AmbName(Id("selfRef")), Id(methodName)))
+			method-code-replacements:
+				Method(This(), None(), Id(methodName)) ->
+				Method(MethodName(AmbName(Id("selfRef")), Id(methodName)))
+				
+				
+			field-code-replacements:
+				FieldDec(visibility,type,name) ->
+				FieldDec([Private()],type,name)
+
+
 			method-impl:
 				([],familyname,super,[],methodsdone,type) ->
 				[]
@@ -592,13 +635,13 @@ public sugar Sugar {
 			method-impl:
 				([method | rest],familyname,super,methods,methodsdone,type) ->
 				[
-					method  | <method-impl> (rest,familyname,super,methods,[<get-method-signature>(method,familyname) | methodsdone],type)
+					<innermost(method-code-replacements)> method  | <method-impl> (rest,familyname,super,methods,[<get-method-signature>(method,familyname) | methodsdone],type)
 				]
 				where <match-method> method
 			method-impl:
 				([field | rest],familyname,super,methods,methodsdone,type) ->
 				[
-					field  | <method-impl> (rest,familyname,super,methods,methodsdone,type)
+					<innermost(field-code-replacements)> field  | <method-impl> (rest,familyname,super,methods,methodsdone,type)
 				]
 				where <match-field> field
 
@@ -659,6 +702,72 @@ public sugar Sugar {
 				where <and(compare-first(structurally-equal),compare-second(structurally-equal))>((name,name2),(param,param2))
 				
 			
+			generate-useless-selfref-methods:
+				[] ->[]
+			generate-useless-selfref-methods:
+				[super | rest] -> 
+				[MethodDec(
+	                MethodDecHead(
+	                  [Public()]
+	                , Some(
+	                    TypeParams(
+	                      [ TypeParam(
+	                          Id("C")
+	                        , Some(
+	                            TypeBound(
+	                              [ClassOrInterfaceType(TypeName(PackageOrTypeName(Id(super)), Id("Methods")), None())]
+	                            )
+	                          )
+	                        )
+	                      ]
+	                    )
+	                  )
+	                , Void()
+	                , Id("setSelfRef")
+	                , [Param(
+	                     []
+	                   , ClassOrInterfaceType(TypeName(Id("C")), None())
+	                   , Id("selfRef")
+	                   )]
+	                , None()
+	                )
+	              , Block([])
+	              ) | <generate-useless-selfref-methods> rest]
+
+
+			generate-useless-selfref-methods-super:
+				[] ->[]
+			generate-useless-selfref-methods-super:
+				[super | rest] -> 
+					<nub> <concat> [<superList> super
+						, <generate-useless-selfref-methods-super> rest]
+
+
+			redirect-selfRef-to-super:
+				([],sig) -> []
+			redirect-selfRef-to-super:
+				([super | rest],sig) ->
+                    <redirect-selfRef-to-super> (rest,sig)
+				where <not(elem)> (sig,[[] | <typeList>super])
+			redirect-selfRef-to-super:
+				([super | rest],sig) ->
+					[ExprStm(
+                      Invoke(
+                        Method(MethodName(AmbName(Id(<typemethod-to-super-object>super)), Id("setSelfRef")))
+                      , [ExprName(Id("selfRef"))]
+                      )
+                    ) | <redirect-selfRef-to-super> (rest,sig)]
+				where <elem> (sig,<typeList>super)
+			redirect-selfRef-to-super:
+				([super | rest],[]) ->
+					[ExprStm(
+                      Invoke(
+                        Method(MethodName(AmbName(Id(<typemethod-to-super-object>super)), Id("setSelfRef")))
+                      , [ExprName(Id("selfRef"))]
+                      )
+                    ) | <redirect-selfRef-to-super> (rest,[])]
+
+
 			typemethods:
 				(familyname,super,[],types,methods,typesdone) ->
 				[] where <structurally-equal> (<qsort(sort-by-method-name)>types,<qsort(sort-by-method-name)>typesdone)
@@ -686,20 +795,71 @@ public sugar Sugar {
            			     )],
            			    // Debug End*/
            			    <derived-object>(<family-super-list>super,type,<getFieldNumber>(<typeHead>type,1)),
-		              	[Return(
-		                  Some(
+		              	[LocalVarDecStm(
+                        LocalVarDec(
+                          []
+                        , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+                        , [ VarDec(
+                              Id("instance")
+                            ,
 		                    NewInstance(
 		                      None()
 		                    , ClassOrInterfaceType(TypeName(Id("Methods")), None())
 		                    , []
 		                    , Some(
 		                        ClassBody(
+		                        	<concat> [[ FieldDec(
+                                        [Private()]
+                                      , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+                                      , [VarDec(Id("selfRef"), Lit(Null()))]
+                                      )],
 		                          <method-impl>([],familyname,<family-super-list>super,methods,[],type)
+		                            , <generate-useless-selfref-methods> <generate-useless-selfref-methods-super> <family-super-list> super
+		                          	, [MethodDec(
+                                        MethodDecHead(
+                                          [Public()]
+                                        , Some(
+                                            TypeParams(
+                                              [ TypeParam(
+                                                  Id("C")
+                                                , Some(TypeBound([ClassOrInterfaceType(TypeName(Id("Methods")), None())]))
+                                                )
+                                              ]
+                                            )
+                                          )
+                                        , Void()
+                                        , Id("setSelfRef")
+                                        , [Param(
+                                             []
+                                           , ClassOrInterfaceType(TypeName(Id("C")), None())
+                                           , Id("selfRef")
+                                           )]
+                                        , None()
+                                        )
+                                      , Block(
+                                          <concat>[[ ExprStm(
+                                              Assign(Field(This(), Id("selfRef")), ExprName(Id("selfRef")))
+                                            )],
+                                            <redirect-selfRef-to-super> (<family-super-list> super,[])
+                                          ]
+                                        )
+                                      )]
+                                      
+		                          ]
 		                        )
 		                      )
 		                    )
 		                  )
-		                )]
+		                  ]))
+		                  , ExprStm(
+		                      Invoke(
+		                        Method(MethodName(AmbName(Id("instance")), Id("setSelfRef")))
+		                      , [ExprName(Id("instance"))]
+		                      )
+		                    )
+		                  , Return(Some(ExprName(Id("instance"))))
+
+		                ]
 		              ]
 		            )
 		          )
@@ -744,25 +904,73 @@ public sugar Sugar {
 		           			<virtual-params-to-signature-replace <+ virtual-params-to-signature>
 		       					(virtualParams,familyname,"Methods",[Final()])),
 		               			<virtual-params-to-constructor>virtualParams),
-		              	[Return(
-		                  Some(
+		              	[LocalVarDecStm(
+                        LocalVarDec(
+                          []
+                        , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+                        , [ VarDec(
+                              Id("instance")
+                            ,
 		                    NewInstance(
 		                      None()
 		                    , ClassOrInterfaceType(TypeName(Id("Methods")), None())
 		                    , []
 		                    , Some(
 		                        ClassBody(
-		                          
+		                          <concat> [[FieldDec(
+                                        [Private()]
+                                      , ClassOrInterfaceType(TypeName(Id("Methods")), None())
+                                      , [VarDec(Id("selfRef"), Lit(Null()))]
+                                      )],
 		                          	<method-impl>(body,familyname,<family-super-list>super,methods,[],
 		                          	(classname,
 					           			<virtual-params-to-signature-replace <+ virtual-params-to-signature>
 					       					(virtualParams,familyname,"Methods",[Final()])))
-		                          
+		                            , <generate-useless-selfref-methods> <generate-useless-selfref-methods-super> <family-super-list> super
+		                          	, [MethodDec(
+                                        MethodDecHead(
+                                          [Public()]
+                                        , Some(
+                                            TypeParams(
+                                              [ TypeParam(
+                                                  Id("C")
+                                                , Some(TypeBound([ClassOrInterfaceType(TypeName(Id("Methods")), None())]))
+                                                )
+                                              ]
+                                            )
+                                          )
+                                        , Void()
+                                        , Id("setSelfRef")
+                                        , [Param(
+                                             []
+                                           , ClassOrInterfaceType(TypeName(Id("C")), None())
+                                           , Id("selfRef")
+                                           )]
+                                        , None()
+                                        )
+                                      , Block(
+                                          <concat>[[ ExprStm(
+                                              Assign(Field(This(), Id("selfRef")), ExprName(Id("selfRef")))
+                                            )],
+                                            <redirect-selfRef-to-super> (<family-super-list> super,<strip-annos>(classname,
+		           			<virtual-params-to-signature-replace <+ virtual-params-to-signature>
+		       					(virtualParams,familyname,"Methods",[Final()])))
+                                          ]
+                                        )
+                                      )]
+		                          ]
 		                        )
 		                      )
 		                    )
-		                  )
-		                )
+		                  )]))
+		                  	, ExprStm(
+		                        Invoke(
+		                          Method(MethodName(AmbName(Id("instance")), Id("setSelfRef")))
+		                        , [ExprName(Id("instance"))]
+		                        )
+		                      )
+		                    , Return(Some(ExprName(Id("instance"))))
+		                
 		                ]
 		              ]
 		            )
@@ -852,6 +1060,10 @@ public sugar Sugar {
 	    generate-sugar-list-types-type:
 	    	(typename,params) ->
 	    	NoAnnoList(Tuple([NoAnnoList(Str(typename)), NoAnnoList(List(<generate-sugar-list-types-type-param> params))]))
+
+	    generate-sugar-list-types-type:
+	    	(supername) ->
+	    	NoAnnoList(Str(supername))
 	   	
 	   	
 	   	generate-sugar-list-types:
@@ -941,6 +1153,23 @@ public sugar Sugar {
                 ]
 	    
 	    
+	    generate-sugar-super:
+	    	(familyname,super) ->
+	    		[ RDefNoArgs(
+                  "superList"
+                , RuleNoCond(
+                    NoAnnoList(Tuple([NoAnnoList(Str(familyname))]))
+                    , App(
+                      CallNoArgs(SVar("nub"))
+                    , App(
+                        CallNoArgs(SVar("strip-annos"))
+                      , <traverse-down-super> ("superList",super,[(familyname)])
+                      )
+                    )
+                  )
+                )]
+
+	    
 	    desugar-family-sugar:
 	    	(familyname,super,virtualClasses) -> 
 			    [
@@ -953,7 +1182,8 @@ public sugar Sugar {
 							  <generate-sugar-list> (familyname,super,<current-types> (virtualClasses,familyname,"Methods"),"typeList"),
 				              <generate-sugar-list> (familyname,super,<current-methods> (virtualClasses,familyname,"Methods"),"methodList"),
 				              <generate-sugar-head> (familyname,<current-types-head> (virtualClasses,familyname),"typeHead"),
-							  <generate-sugar-head> (familyname,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead")
+							  <generate-sugar-head> (familyname,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead"),
+							  <generate-sugar-super> (familyname,super)
 				            ]
 				        )
 				      )
@@ -1037,6 +1267,8 @@ public sugar Sugar {
 	 	"" -> ""
 	 methodHead:
 	 	"" -> ""
+	 superList:
+	    "" -> ""
 	
 	// Temporär:
 	/*
