@@ -1168,6 +1168,17 @@ public sugar Sugar {
                     )
                   )
                 )]
+		
+
+/*		generate-sugar-super-only:
+	    	(familyname,super) ->
+	    		[ RDefNoArgs(
+                  "super"
+                , RuleNoCond(
+                    NoAnnoList(Tuple([NoAnnoList(Str(familyname))]))
+                    , App(CallNoArgs(SVar("read-from-string")), NoAnnoList(Str(<write-to-string>super)))
+                  )
+                )]*/
 
 	    
 	    desugar-family-sugar:
@@ -1184,6 +1195,7 @@ public sugar Sugar {
 				              <generate-sugar-head> (familyname,<current-types-head> (virtualClasses,familyname),"typeHead"),
 							  <generate-sugar-head> (familyname,<current-methods-head> (virtualClasses,familyname,"Methods"),"methodHead"),
 							  <generate-sugar-super> (familyname,super)
+							  //,<generate-sugar-super-only> (familyname,super)
 				            ]
 				        )
 				      )
@@ -1268,6 +1280,8 @@ public sugar Sugar {
 	 methodHead:
 	 	"" -> ""
 	 superList:
+	    "" -> ""
+	 super:
 	    "" -> ""
 	
 	// Temporär:
