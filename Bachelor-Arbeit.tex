@@ -100,7 +100,7 @@ Extending a programming language (which is Java in this case) with new syntax is
 %%%%%%%%% Solution to the Expression Problem
 \chapter{Solution to the Expression Problem}
 
-In this chapter we develop a solution to the Expression Problem based on a solution bei Oliveira et. al. \cite{Oliv-Extensibility-2012}. We modify it to the state, that much of the code can easily be generated. We use object algebras for the factorization of the Expression objects and delegation for independent extensibility \cite{Tempero-Multiple-2000}. In the next chapter we develop a SugarJ library that can generate the code to this solution.
+In this chapter we develop a solution to the Expression Problem based on a solution developed by Oliveira et. al. \cite{Oliv-Extensibility-2012}. We modify it to a state where much of the code can easily be generated. We use object algebras for the factorization of the Expression objects and delegation for independent extensibility \cite{Tempero-Multiple-2000}. In the next chapter we describe the development of a SugarJ library that can generate the code for this solution.
 
 
 %%%%%% The Problem
@@ -126,7 +126,7 @@ The requirements on a solution to the problem are proposed by Wadler and Zenger 
 
 To clarify the problem and the solution we use an example that is used in much of the literature about the EP. The example consists of simple abstract mathematical expressions (e.g. 1 + 2) with two types: \emph{Literals} (in this case natural numbers: 1, 2, 3, ...) and the \emph{Add operation}. The base package\footnote{It is not mandatory a \emph{package}. We consider \emph{package} as editable entity} only consists of the lit-object with a print-method (Figure \ref{exampleLitBaseClass}).
 
-Notice that the code-example in this section is considered as a not valid solution.
+Note that the code-example in this section is considered a "not valid solution".
 
 
 \begin{figure}[H]
@@ -205,15 +205,15 @@ class Add2 extends Add implements IPrintCount {
 
 \section{Background}
 
-To solve this problem we take the idea of a solution to the Expression Problem, that was proposed by Oliveira et. al. \cite{Oliv-Extensibility-2012}. The independent extensibility is done with delegation to which we have develop a solution for dynamic binding.
+To solve this problem we use the idea of a solution to the Expression Problem, that was proposed by Oliveira et. al. \cite{Oliv-Extensibility-2012} to derive our own solution that features independent extensibility in another way than Oliveira et. al. The independent extensibility is done with delegation to which we develop a solution for dynamic binding.
 
-This section introduces the used technologies. Notice that code-examples in this section are either from the work of the authors of the technologies or from us implementing the ideas of their work.
+This section introduces the technologies used. Note that code-examples in this section are either from the work of the authors of the technologies or our implementations of the ideas of their work.
 
 %%%%%% Solution: Extensibility for the Masses
 
 \subsection{Solution: Extensibility for the Masses}
 
-The solution by Oliveira et. al. \cite{Oliv-Extensibility-2012} is an approach that uses \emph{Object Algebras}. Object algebras are related to the \emph{Abstract Factory} pattern, that is a way to inject dependencies \cite{Gof-Design-1993}. The dependency injection with object algebras solves the requirement for \emph{Strong static type safety} (see section \ref{theProblem}). The other requirements are met by decoupling the operations from their generic Java types and creating an extra result type for every result of an operation (see figure \ref{differentAlgebras}). This elegantly bypasses most of the requirements including the requirement of \emph{Independent extensibility}, which is difficult to comply with.
+The solution by Oliveira et. al. \cite{Oliv-Extensibility-2012} is an approach that uses \emph{Object Algebras}. Object algebras are related to the \emph{Abstract Factory} pattern, which is used to inject dependencies \cite{Gof-Design-1993}. The dependency injection with object algebras solves the requirement for \emph{Strong static type safety} (see section \ref{theProblem}). The other requirements are met by decoupling the operations from their generic Java types and creating an extra result type for every result of an operation (see figure \ref{differentAlgebras}). This elegantly bypasses most of the requirements including the requirement of \emph{Independent extensibility}, which is difficult to comply with.
 
 \begin{figure}[h]
 \begin{lstlisting}[language=java]
@@ -233,7 +233,7 @@ To add new types one would extend the object algebra interface, to add new opera
 This approach is very neat. However we chose not to use this solution for the following reasons:
 
 \begin{itemize}
-  \item \emph{Surrounding code}: Developers that write the surrounding code need a great deal of knowledge about the solution and its inner implementation. They do not get an interface that concludes all operations and they have to decide which interface brings which operation (see figure \ref{combineExampleSurrounding}).
+  \item \emph{Surrounding code}: Developers that write the surrounding code need a great deal of knowledge about the solution and its inner implementation. They do not get an interface that concludes all operations and they have to decide which interface introduces which operation (see figure \ref{combineExampleSurrounding}).
   \item \emph{Complexity}: The proposed extension relies on nesting the \lstinline{Union<A>}- and \lstinline{Combine<A,B>}-algebras and the \lstinline{Pair<A,B>}-result. This would become very complex. Our aim is to have a solution that can easily be generated and that does not seem possible with the complexity of this solution.
   \item \emph{Depending methods}: Oliveira et. al. presents a \lstinline{Debug} object algebra as an example of depending methods. This algebra prints out debug data on the console. There is no solution that has been shown to work with dependent methods that include a return value. We assume such a case would look like that described in figure \ref{dependentPrintTerm} which uses \emph{delegation}. However this is a very complex solution \cite{Tempero-Multiple-2000}. A similar solution is proposed by Oliveira et. al. in Scala \cite{Oliv-Feature-2013}.
 \end{itemize}
@@ -322,9 +322,9 @@ System.out.println(p.b().print() + "=" + p.a().eval());
 
 Independent extension requires some kind of \emph{multiple inheritance}. We chose not to use the solution of Oliveira et. al. because of its complexity. Instead we simulate \emph{multiple inheritance} with \emph{interface-delegation} as proposed by Tempero et. al. \cite{Tempero-Multiple-2000}.
 
-Java does not support \emph{multiple inheritance} for classes. To support \emph{independent extensibility} without multiple inheritance, we simulate it. For every \emph{super-type} (named \emph{parent}) that is inherited from we instantiate an object\footnote{We consider every extension to be non-abstract} in the constructor. Every operation that is not implemented in the \emph{derived type} (named \emph{child}) is explicitly delegated to the \emph{parent} and the returned result of the \emph{parent} afterwards is returned by the \emph{child}s operation. This means that for every operation that a class has it has either its own implementation or a parent that it can delegate the operation to (see figure \ref{delegationExample}).
+Java does not support \emph{multiple inheritance} for classes. To support \emph{independent extensibility} without multiple inheritance, we simulate it. For every \emph{super-type} (named \emph{parent}) that is inherited from, we instantiate an object\footnote{We consider every extension to be non-abstract} in the constructor. Every operation that is not implemented in the \emph{derived type} (named \emph{child}) is explicitly delegated to the \emph{parent} and the returned result of the \emph{parent} afterwards is returned by the \emph{child}s operation. This means that for every operation that a class has it has either its own implementation or a parent that it can delegate the operation to (see figure \ref{delegationExample}).
 
-The combined class (\emph{child}) decides which operation is delegated to which parent. If only one of the parents implements the operation the child delegates the call to this parent. If more than one parent implements the operation, the child has to decide to which parent it delegates the calls. In languages that support \emph{multiple inheritance} an algorithm implicitly decides from which parent an operation is inherited\footnote{The algorithm is also important on which parent \lstinline{super()}-calls are executed, if the language supports them}. A popular algorithm used for \emph{multiple inheritance} is \emph{mixin linearization} \cite{Bracha-Mixin-1990}. Applying this algorithm flattens and unifies the inheritance tree, which results in a list, that is used to determine the order of inheritance and \lstinline{super()}-calls.
+The combined class (\emph{child}) decides which operation is delegated to which parent. If only one of the parents implements the operation the child delegates the call to this parent. If more than one parent implements the operation, the child has to decide to which parent it delegates the calls. In languages that support \emph{multiple inheritance} an algorithm implicitly decides from which parent an operation is inherited\footnote{The algorithm is also important on which parent \lstinline{super()}-calls are executed, if the language supports them}. A popular algorithm used for \emph{multiple inheritance} is \emph{mixin linearization} \cite{Bracha-Mixin-1990}. Applying this algorithm flattens and unifies the inheritance tree which results in a list that is used to determine the order of inheritance and \lstinline{super()}-calls.
 
 
 \begin{wraptable}{r}{5cm}
@@ -347,7 +347,7 @@ Private    &  \ding{51} &  \ding{51}
 \caption{Visibility support for delegation}
 \label{visibilityTable}
 \end{wraptable}
-Interface-delegation does not support all of Javas visibility features. Field-access cannot be delegated. Therefore public field access is only possible on the child and not on any of the parents. The biggest problem is protected access, because it is inherited with class extension. Private visibility is not meant to be inherited at all so this is not a problem for delegation. See table \ref{visibilityTable} for a quick overview.
+Interface-delegation does not support all of Javas visibility features. Field-access cannot be delegated. Therefore public field access is only possible on the child and not on any of the parents. The biggest problem is protected access because it is inherited with class extension. Private visibility is not meant to be inherited at all so this is not a problem for delegation. See table \ref{visibilityTable} for a quick overview.
 
 
 
@@ -406,7 +406,7 @@ class LitPrintCount {
 
 Our Solution features: a class that contains the \emph{object algebra interface}, the result class interface (\emph{aggregation interface}) and an implementation of the \emph{object algebra}. Surrounding code uses the \emph{object algebra interface} to factorize members of this family that implement the \emph{aggregation interface}. The implementation of the factorization is the \emph{object algebra}, which can be exchanged.
 
-Notice that code-examples in this chapter are part of a valid solution to the Expression Problem developed by us. The names of the interfaces and classes are chosen to fit the aimed solution (see figure \ref{combinedClass}.
+Note that code-examples in this chapter are part of a valid solution to the Expression Problem developed by us. The names of the interfaces and classes are chosen to fit the aimed solution (see figure \ref{combinedClass}.
 
 \subsection{Aggregation Interface}
 
@@ -486,6 +486,7 @@ public class Algebra4 implements Types <Methods2> {
 \end{figure}
 
 \subsection{Dynamic Dispatch}
+\label{dynamicDispatch}
 
 As Tempero et. al. point out, there are some limits to multiple inheritance with delegation \cite{Tempero-Multiple-2000}. We developed a workaround\footnote{The workaround is available online \cite{Peuscher-GitHub-EP-2014}} for the limit of \emph{dynamic dispatch} for \emph{dependent methods} (called \emph{self-calls} by Tempero et. al.). It has some downsides (see section \ref{discussionDynamicDispatch}) but works as expected.
 
@@ -595,17 +596,17 @@ public class Algebra4 implements Types2<Methods2> {
 
 \subsection{Solution to the Problem}
 
-We check if our solution is a valid solution to the Expression Problem as proposed by Wadler and Odersky \cite{Wadler-Expression-1998, Odersky-Expression-2005}:
+Below is a list of checks used to determine if our solution is a valid solution to the Expression Problem, as proposed by Wadler and Odersky \cite{Wadler-Expression-1998, Odersky-Expression-2005}:
 
 \begin{itemize}
-  \item \emph{Extensibility in both dimensions}: The solution can be extended by either new operations or new data variants (types). To do so see section \ref{extendingFamilies} "Extending Families".
+  \item \emph{Extensibility in both dimensions}: The solution can be extended by either new operations or new data variants (types). This is shown in section \ref{extendingFamilies} "Extending Families".
   \item \emph{Strong static type safety}: Static type safety is provided as there are neither explicit casts nor explicit type checks needed.
   \item \emph{No modification or duplication}: Although there is much boilerplate code that comes with every extension the code in previous packages is not being touched when extended.
   \item \emph{Separate compilation}: We do not need code to be recompiled on extension because every package refers only to its own or its super interfaces and classes.
   \item \emph{Independent extensibility}: With delegation instead of inheritance the extensions can be combined independently without touching existing code.
 \end{itemize}
 
-All of the requirements are met in our solution. We consider it a valid solution.
+Our solution complies with all of the requirements above. Therefore, it considered it a valid solution.
 
 \section{Related work}
 
@@ -630,7 +631,7 @@ Bruce's solution depends on a Java language extension named "Rupiah"\cite{Foster
 
 \section{Discussion}
 
-This chapter discusses the usage of delegation instead of regular inheritance. It takes a view on the advantages that come with multiple inheritance and the downsides of delegation and estimates their value.
+This chapter discusses the usage of delegation in lieu of regular inheritance. It discusses a view on the advantages and the disadvantages that come with multiple inheritance and delegation.
 
 \subsection{Delegation}
 We used delegation to support the requirement of \emph{independent extensibility} \cite{Odersky-Expression-2005, Oliv-Extensibility-2012}. The solution of Oliveira et. al. supports some kind of independent extensibility, but there were some difficulties in its implementation. Also it is not very easily generated because the needed background-knowledge of the implementation needs to be used in the generation process. Also the use of this solution is very inconvenient for the surrounding code. Another point that kept us from using a solution like the one from Oliveira et. al. is that it does not fully support depending methods. We worked out a solution how they could work and found it to be even more difficult to generate than the independent extensibility.
@@ -652,7 +653,7 @@ Our solution to dynamic dispatch for delegation has some downsides that one shou
   \item \emph{Visibility}: Our main idea to overcome the missing \emph{dynamic dispatch} is to set the main object into every super class. We cannot use visibility to limit the external access because the algebra would not have access to set it in the first place. Therefore it is also not safe against nullpointer exceptions.
 \end{itemize}
 
-The most important difficulties of this solution that we want to solve are \emph{Boilerplate code} and bad \emph{convenience}. In the next chapter we present a solution to this difficulties by implementing a SugarJ library that generates most of the boilerplate code and modifies the written code so that a user does not have to care about the special solution.
+Excessive \emph{boilerplate code} and poor \emph{convenience} are two of the most important problems. Our solution sets out to solve these. In the next chapter we present a solution that addresses both of these difficulties by implementing a SugarJ library that generates most of the boilerplate code and modifies the written code so that a user does not have to worry about the special solution.
 
 
 
@@ -682,9 +683,9 @@ This section introduces the used technologies.
 
 \subsection{SugarJ}
 
-SugarJ is a framework which allows seamless integration of syntactic sugar (for Java) into an IDE such as Eclipse \cite{Erdweg-SugarJ-2011}. It uses the \emph{Spoofax framework}, which makes new syntax definitions just in time available in the editor. SugarJ uses syntax definition formalism (SDF) to provide new non-terminals and keywords for language detection \cite{Heering-SDF-1989}. It then uses Stratego/XT rules and strategies to manipulate the generated ATerm tree and afterwards export valid code in Java \cite{Kats-Spoofax-2010, Brand-ATerms-2000}.
+SugarJ is a framework which allows seamless integration of syntactic sugar (for Java) into an IDE such as Eclipse \cite{Erdweg-SugarJ-2011}. It uses the \emph{Spoofax framework}, which makes new syntax definitions just in time available in the editor. SugarJ uses syntax definition formalism (SDF) to provide new non-terminals and keywords for language detection \cite{Heering-SDF-1989}. It then uses Stratego/XT rules and strategies to manipulate the generated ATerm tree and afterwards export the valid code in Java \cite{Kats-Spoofax-2010, Brand-ATerms-2000}.
 
-SugarJ uses SDF a formalism to define syntax (see example in figure \ref{exampleSDFJavaClassDecHead}). There is already a SDF of Java language available in the SugarJ repository where one can lookup design and structure of the language and find information about how to derive ones own language extensions \cite{Heering-SDF-1989, Brand-SDF-2007, Java-SDF-2014}. With this definition, an IDE that supports the Spoofax framework is able to parse, verify and syntax highlight code that is written in this new syntax.
+SugarJ uses SDF to define syntax (see example in figure \ref{exampleSDFJavaClassDecHead}). There is already a SDF of Java language available in the SugarJ repository where one can lookup design and structure of the language and find information about how to derive ones own language extensions \cite{Heering-SDF-1989, Brand-SDF-2007, Java-SDF-2014}. With this definition, an IDE that supports the Spoofax framework is able to parse, verify and syntax highlight code that is written in this new syntax.
 
 \begin{figure}[H]
 \begin{lstlisting}[language=java,breaklines=false]
@@ -727,9 +728,11 @@ SugarJ uses these two technologies, in combination with the Spoofax framework, t
 An \emph{algebraic signature} is the structure of a type and contains its return type, its parameters and its name {Oliv-Extensibility-2012}. Parameters can either be abstract of concrete. Abstract parameters represent the current interface that factorizes the main object. In the example described in section \ref{example} the signature of "Lit" is \lstinline{Lit: Integer -> Methods} and the signature of "Add" is \lstinline{Add: Methods x Methods -> Methods}. The algebraic signature of a type is the same among family inheritances, although the \lstinline{Methods}-type is abstract so that it is adapted to the interface of the according family.
 
 \subsection{Cognitive Dimensions}
+\label{backgroundCognitiveDimensions}
 
-To get a neat integration and a wide usage of a language extension one needs to check the integration features with the existing language. To not rely on implicit decisions when defining a new language extension we have a way to figure out if our design meets the known patterns called \emph{cognitive dimensions} \cite{Green-Cognitive-1996}. Especially \emph{consistency} is a feature where we have to focus on. Most of the metrics are the reason why we want to extend languages with a specialized domain syntax.
+To get a neat integration and a wide usage of a language extension one needs to check the integration features with the existing language.
 
+This is done using \emph{cognitive dimensions}, which describe a set of features and rules that are used to check the performance of the a language against standard metrics \cite{Green-Cognitive-1996}. \emph{Cognitive dimensions} are also used when designing new syntax to ensure the new code will meet the quality of the code.
 
 \subsubsection*{The \emph{Consistency} Metric}
 
@@ -783,12 +786,14 @@ We define the syntax extension in SDF. The SDF-matching generates an ATerm that 
 
 We need an entry point for the existing non-terminals (constructors are non-terminals) in Java language. We chose the \emph{JavaTypeDec} as it is the top level\footnote{On top of that are only imports and namespaces which cannot be matched by SugarJ, because they are used to define which SugarJ-library will be used.} of declaration in Java, where every class, interface, etc. is declared. We define a new keyword "family" and bring it into context with our own structure. To not reinvent the wheel, we referred to the generic Java non-terminals as often as possible (e.g. JavaClassBody, we do not have to redefine what a class-body contains of). After that, the new syntax could be matched. In figure \ref{sdfFamilies} the whole SDF for our syntax extension can be seen.
 
+To define the syntax, we first have to define the keywords, which is only the "family" in our case. The lexical restrictions define which characters can be (or not be) next to the keyword to let it still count as keyword. Afterwards we can use the keyword in the syntax declaration. The structure of the family syntax declaration orientates on the syntax declaration of Java classes. The entry point can be seen in line 7: JavaTypeDec is the top level declaration type. That means families are expected on the top level of a file right beneath the imports where one would generally write class and interface declarations. The exit point is in line 21 and 22 where the JavaClassBody is referenced. That means a generic JavaClassBody-element (like fields and methods) can be placed inside a \emph{family class}.
+
 \begin{figure}[H]
 \begin{lstlisting}[language=java,breaklines=false]
   lexical syntax
     "family" -> JavaKeyword
   lexical restrictions
-  	"family" -/- [A-Za-z0-9\_\$] 
+  	  "family" -/- [A-Za-z0-9\_\$] 
   sorts FamilyDecHead FamilyBody FamilySuper FamilyDec
   context-free syntax
     FamilyDec -> JavaTypeDec
@@ -796,22 +801,22 @@ We need an entry point for the existing non-terminals (constructors are non-term
       FamilyDecHead {cons("FamilyDecHead")}
     JavaID -> FamilyClassId {cons("FamilyClassId")}
     JavaID -> 
-      FamilyVirtualClassId {cons("FamilyVirtualClassId")}
+      FamilyFamilyClassId {cons("FamilyFamilyClassId")}
     FamilyDecHead FamilyBody ->
       FamilyDec {cons("FamilyDec")}
     "{" FamilyBodyDec* "}" ->
       FamilyBody {cons("FamilyBody")}
     "extends" { FamilyClassId ","}+ ->
       FamilySuper {cons("FamilySuper")}
-    VirtualClassDec ->
+    FamilyClassDec ->
       FamilyBodyDec {cons("FamilyBodyDec")}
-    VirtualClassDecHead JavaClassBody ->
-      VirtualClassDec {cons("VirtualClassDec")}
-    "family" "class" FamilyVirtualClassId
-        "(" {VirtualFormalParam ","}* ")" ->
-      VirtualClassDecHead {cons("VirtualClassDecHead")}
+    FamilyClassDecHead JavaClassBody ->
+      FamilyClassDec {cons("FamilyClassDec")}
+    "family" "class" FamilyFamilyClassId
+        "(" {FamilyClassFormalParam ","}* ")" ->
+      FamilyClassDecHead {cons("FamilyClassDecHead")}
     JavaID JavaVarDecId ->
-      VirtualFormalParam {cons("VirtualFormalParam")}
+      FamilyClassFormalParam {cons("FamilyClassFormalParam")}
 \end{lstlisting}
 \caption{Actual implementation of the matching SDF for the syntax extension for "families". This is and example in SDF-code.}
 \label{sdfFamilies}
@@ -824,46 +829,91 @@ The rewriting rules have to be defined strict\footnote{On the top level however 
 For example of a \emph{Stratego} rule, see figure \ref{exampleStrategoClassInterfaceTranslation}. The code of our \emph{Stratego} rules are about 1200 lines. The entry point of the rewriting is the \lstinline{desugar-family} strategy, that generates the outer Java class of our solution.
 
 \begin{figure}[H]
-\begin{lstlisting}[language=java,breaklines=false,morekeywords={familyname,super,virtualClasses},keywordstyle=\bfseries\color{OliveGreen}]
+\begin{lstlisting}[language=java,breaklines=false,morekeywords={familyname,super,familyClasses},keywordstyle=\bfseries\color{OliveGreen}]
   desugar-family:
     FamilyDec(
       FamilyDecHead(FamilyClassId(familyname), super)
-    , FamilyBody(virtualClasses)
+    , FamilyBody(familyClasses)
     ) ->
       <concat> [[
         ClassDec(
           ClassDecHead([Public()], Id(familyname)
           , None(), None(), None())
-        , ClassBody( [
+        , ClassBody([
             <desugar-family-type-interface> (
-              familyname,super,virtualClasses)
+              familyname,super,familyClasses)
           , <desugar-family-function-interface> (
-              familyname,super,virtualClasses)
+              familyname,super,familyClasses)
           , <desugar-family-class> (
-              familyname,super,virtualClasses)
+              familyname,super,familyClasses)
           , FieldDec(
               [Protected(), Static()]
             , ClassOrInterfaceType(
                 TypeName(Id("Algebra")), None())
             , [VarDec(Id("_algebra"))])
           , <desugar-family-algebra> (familyname)
-          ] )
+          ])
 	     )]
       , <desugar-family-sugar>
           (familyname
-            , <family-super-list>super,virtualClasses)
+            , <family-super-list>super,familyClasses)
       ]
 \end{lstlisting}
-\caption{First rule that is applied and desugars a \emph{family} declaration. It generates the outer class and delegates the implementation of the different parts (interfaces, classes) to other rules. the last rule (desugar-family-sugar) generates a new SugarJ library with variable parts.}
+\caption{First rule that is applied and desugars a \emph{family} declaration. It generates the outer class and delegates the implementation of the different parts (interfaces, classes) to other rules. The last rule (desugar-family-sugar) generates a new SugarJ library with variable parts.}
 \label{exampleStrategoClassInterfaceTranslation}
 \end{figure}
 
+We cannot cover all of the rules in this thesis and most of them look very equal, but based on the main rule (\emph{desugar-family} - see figure \ref{exampleStrategoClassInterfaceTranslation}) we give a closer look about some special cases. The first part before the arrow (->) is the matching of the ATerm. There are three variables in which the sub-terms are saved: \bfseries familyname\mdseries, \bfseries super \mdseries and \bfseries familyClasses \mdseries. \bfseries familyname \mdseries is a string with the name of the family, \bfseries super \mdseries is an ATerm that either is \lstinline{None()} or \lstinline{FamilySuper(...)} and \bfseries familyClasses \mdseries is either \lstinline{[ ]} (empty list) or \lstinline{[FamilyClassDec(...),...]} . In the second part the \lstinline{<...>}-calls are explicit calls to rules with the next ATerm as parameter.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{\textless desugar-family-function-interface\textgreater, \textless desugar-family-type-interface\textgreater, \textless desugar-family-algebra\textgreater{} and FieldDec(...)}
 
+The right side of the arrow has a very similar structure to the example in figure \ref{combinedClass}. The lines 7-24 of the example are actually used to generate the code in this example. The \lstinline{<desugar-family-type-interface>}-rule generates the object algebra interface (\lstinline{Types<A>} see \ref{algebraInterfaces}) and the \lstinline{<desugar-family-function-interface>}-rule generates the aggregation interface (\lstinline{Methods} see \ref{dynamicDispatchMethods}). Both are very simple because they just generate a fix structure with the according \lstinline{extends}-clauses as the family itself. Only the types and methods in the actual family have to be written, because the rest is inherited. "Overwriting" inherited methods does not make any difference. The \lstinline{<desugar-family-algebra>}-rule has even more static content. It generates the \lstinline{Algebra()}-singleton where only the familyname is needed. The \lstinline{FieldDec(...)}-part is part of the singleton and is the field where the single instance is saved. It is extra in this structure because when we would return a list in \lstinline{<desugar-family-algebra>}-rule, the Java pretty printer would fail with an error. It would try to parse a list in the ClassBody list that it does not expect as a list is no ClassBodyDec.
+
+The more difficult parts are in the \lstinline{\textless desugar-family-sugar\textgreater}-rule and the \lstinline{\textless desugar-family-class\textgreater}-rule.
+
+\subsubsection{\textless{}desugar-family-sugar\textgreater}
+The \lstinline{<desugar-family-sugar>}-rule is used to export meta data about a special family. The proposed method to use content from other desugarings is to define a SugarJ library within the desugaring process. The SugarJ parser will generate a SugarJ library that any other SugarJ library can include and use the rules in this library. The importing does not even has to be inside the SugarJ code but in a (sugared) domain language file that includes both SugarJ libraries. We use this technique to export the types, methods and all super families so that an extending family knows which types and methods it has to delegate and knows to which super family it has to extend to. The SugarJ/Stratego file that the example in figure \ref{thirdExtensionFamily} generates has 5 rules in it:
+\begin{itemize}
+    \item \lstinline{typeList ("IntAlgSubCount")}: this rule returns a list of pairs of algebraic signatures of \emph{types} in this structure: (typeName,[parameterName1,parameterName2,...]).
+    \item \lstinline{methodList ("IntAlgSubCount")}: this rule returns a list of pairs of \emph{methods} and their parameters in this structure: (methodName,[parameterName1,parameterName2,...]).
+    \item \lstinline{typeHead (typeName,[parameterName1,...])}: Returns the type method head for the algebra and the parameters that are needed to delegate the type if it is not overwritten by the extending family.
+    \item \lstinline{methodHead (methodName,[parameterName1,...])}: Returns the method head and the parameters that are needed to delegate the method if it is not overwritten by any type of the extending family.
+    \item \lstinline{superList ("IntAlgSubCount")}: Returns a list of all super families that this family inherits from. This is needed for all the \lstinline{setSelfRef(...)} methods that have to be implemented (see section \ref{dynamicDispatch}).
+\end{itemize}
+Because the methodHead-rule and typeHead-rule return complex structures and the effort to generate the rule that would return the structures with constructors and lists would be too big, we serialize the structure into a string and on calling the rule, deserialize it. The rules for this (de-)serialization are built into Stratego and are called "write-to-string" (for serialization) and "read-from-string" (for deserialization).
+
+The SugarJ-libraries are fortunately included implicitly because the families that an extension extends have to be imported explicitly which includes the generated SugarJ libraries.
+
+\subsubsection{\textless{}desugar-family-class>\textgreater}
+The \lstinline{<desugar-family-class>}-rule generates the algebra. This includes the delegation which would not work if we would not have the exported metadata from the super families. With this data the generation of types and methods is mostly simple iterating over lists and generating the delegation code where either whole types or only methods of types are not overwritten. The setSelfRef-Methods that are derived by every super family are generated with the metadata that was exported by the super families.
+
+We do not want the user to have to worry about the selfRef-implementation so we need to desugar every implicit method-call without an object and every \lstinline{this}-method-call to be redirected to the selfRef-object. For this operation we need a \emph{strategy}\footnote{A strategy is a rule, that defines how a given rule is applied.} that does not need to be applied to a fix structure but that searches an ATerm for a structure and replace it everywhere. There are some strategies built into Stratego that support this feature. We choose the "innermost" strategy. The call of a rule with this strategy looks like this: \lstinline{<innermost(method-code-replacements)> ATerm}. The according rule to replace every occurrence of an implicit method-call by a call on the selfRef-object is shown in figure \ref{replaceMethodBySelfRef}.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=java,breaklines=false,morekeywords={familyname,super,familyClasses},keywordstyle=\bfseries\color{OliveGreen}]
+method-code-replacements:
+  (MethodName(Id(methodName))) ->
+    Method(MethodName(AmbName(Id("selfRef"))
+      ,Id(methodName)))
+\end{lstlisting}
+\caption{Stratego-rule to replace every occurrence of an implicit method-call by a call on the selfRef-object.}
+\label{replaceMethodBySelfRef}
+\end{figure}
+
+\section{Related Work}
+
+SugarJ is in an early stage of popularity. Therefore there are not many papers that \emph{use} SugarJ but many \emph{about} SugarJ. This section compares our work with SugarJ with the paper we found that was comparable.
+
+\subsection{Embedding a Questionnaire DSL with SugarJ \cite{Erdweg-Questionnaire-2013}}
+
+The paper is from Erdweg, the main founder of SugarJ, so the knowledge of him about the technology is very high. Compared to our situation, where the study of the technology can be seen as part of the work, the code is obvious superior. The semantic structuring among different files is consistent where in our work, everything is in one combined file. He uses features that we either did not know existed or did not understand their use like annotations and editor commands. On the other hand we consciously decided to not use embedded Java syntax. Our rules do not contain much static content. Therefore we decided to used plain aterm rules.
+
+It is not surprising that the work is a sovereign example how work with SugarJ can look. Questionnaire is very great example how powerful SugarJ is.
 
 
 \section{Discussion}
+
+This section compares our syntax extension to the \emph{Cognitive Dimensions} from section \ref{backgroundCognitiveDimensions}.
 
 \subsection{Cognitive Dimensions}
 
@@ -887,6 +937,10 @@ Our draft does not support this requirement yet, because of the need for static 
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 
 
 
@@ -902,7 +956,7 @@ Our draft does not support this requirement yet, because of the need for static 
 \section{Limitations}
 \label{syntaxExtensionLimitations}
 
-Although the syntax extension alone is only limited by the ideas we have, we will provide a solution to desugar this syntax to valid Java code that is based on our solution to the expression problem (see section "Suggested Solution" \ref{suggestedEPSolution}). There are a few limitations that desugaring caused. To some of the limitations we will provide a potential solution that we could not prove, to a few we only had an idea how to start. Reasons for this limitations were mostly these:
+Although the syntax extension alone is only limited by the ideas we have, we provide a solution to desugar this syntax to valid Java code that is based on our solution to the expression problem (see section "Suggested Solution" \ref{suggestedEPSolution}). There are a few limitations that desugaring caused. To some of the limitations we will provide a potential solution that we could not prove, to a few we only had an idea how to start. Reasons for this limitations were mostly these:
 \begin{itemize}
   \item Lack of time
   \item The problem is too difficult to solve in the scope of this paper
@@ -1016,23 +1070,6 @@ The solution to the \lstinline{super()} call and methods on the super-object cou
 
 In the part of the Stratego rules that replaces the family name by the abstract type, a recursively\footnote{recursively because type parameters could also have type parameters where the family could be found} rule should be called which replaces the family names in type parameters.
 
-\chapter{Other Work In This Domain}
-
-\section{SugarJ \cite{Erdweg-SugarJ-2011} Use Cases}
-
-SugarJ is in an early stage of popularity. Therefore there are not many papers that \emph{use} SugarJ but many \emph{about} SugarJ. There is only one paper that writes about the implementation of a use case. This section compares our work with SugarJ with the paper we found.
-
-\subsection{Embedding a Questionnaire DSL with SugarJ \cite{Erdweg-Questionnaire-2013}}
-
-The paper is from Erdweg, the main founder of SugarJ, so the knowledge of him about the technology is very high. Compared to our situation, where the study of the technology can be seen as part of the work, the code is obvious superior. The semantic structuring among different files is consistent where in our work, everything is in one combined file. He uses features that we either did not know existed or did not understand their use like annotations and editor commands. On the other hand we consciously decided to not use embedded Java syntax. Our rules do not contain much static content. Therefore we decided to used plain aterm rules.
-
-It is not surprising that the work is a sovereign example how work with SugarJ can look. Questionnaire is very great example how powerful SugarJ is.
-
-\section{The Expression Problem with Syntax Extension}
-
-There are plenty of solutions to the Expression Problem that rely on syntax extensions in literature.
-
-\subsection{JavaGI: Generalized Interfaces for Java \cite{Wehr-JavaGI-2007}}
 
 \chapter{Use Case}
 
