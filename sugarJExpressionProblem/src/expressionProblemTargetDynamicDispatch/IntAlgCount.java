@@ -3,19 +3,25 @@ package expressionProblemTargetDynamicDispatch;
 public class IntAlgCount {
 	public interface Types <A> extends IntAlg.Types<A> {
 	}
-	public interface Methods extends IntAlg.Methods {
+
+	public interface PuMethods extends IntAlg.PuMethods {
 		public Integer count();
-		public <B extends Methods> void setSelfRef(B selfRef);
+	}
+	public interface Methods extends PuMethods,IntAlg.Methods {
+		public <B extends PrMethods> void setProtectedRef(B selfRef);
+	}
+	public interface PrMethods extends PuMethods,IntAlg.PrMethods {
+		public String dynamic();
 	}
 	public class Algebra implements Types<Methods> {
 		public Methods lit(final Integer x) {
 			final IntAlg.Methods _intAlgLitInstance = new IntAlg().new Algebra().lit(x);
-			Methods instance = new IntAlgCount.Methods() {
-				private Methods selfRef = null;
-				public <C extends IntAlg.Methods> void setSelfRef(C selfRef) {}
-				public <C extends Methods> void setSelfRef(C selfRef) {
+			final Methods _instance = new IntAlgCount.Methods() {
+				private PrMethods selfRef = null;
+				public <C extends IntAlg.PrMethods> void setProtectedRef(C selfRef) {}
+				public <C extends PrMethods> void setProtectedRef(C selfRef) {
 					this.selfRef = selfRef;
-					_intAlgLitInstance.setSelfRef(selfRef);
+					_intAlgLitInstance.setProtectedRef(selfRef);
 				}
 				public String print(String prefix) {
 					return _intAlgLitInstance.print(prefix);
@@ -23,10 +29,18 @@ public class IntAlgCount {
 				public Integer count() {
 					return new Integer(1);
 				}
-				public String dynamic() { return "IntAlgCount"; }
 			};
-			instance.setSelfRef(instance);
-			return instance;
+			PrMethods selfRefInstance = new PrMethods() {
+				public String print(String prefix) {
+					return _instance.print(prefix);
+				}
+				public String dynamic() { return "IntAlgCount"; }
+				public Integer count() {
+					return _instance.count();
+				}
+			};
+			_instance.setProtectedRef(selfRefInstance);
+			return _instance;
 		}
 	}
 	protected static Algebra _algebra;

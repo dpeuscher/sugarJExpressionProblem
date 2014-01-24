@@ -4,25 +4,34 @@ public class IntAlg {
 	public interface Types <A> {
 		public A lit(Integer x);
 	}
-	public interface Methods {
+	public interface PuMethods {
 		public String print(String prefix);
-		public <B extends Methods> void setSelfRef(B selfRef);
+	}
+	public interface Methods extends PuMethods {
+		public <B extends PrMethods> void setProtectedRef(B selfRef);
+	}
+	public interface PrMethods extends PuMethods {
 		public String dynamic();
 	}
 	public class Algebra implements Types<Methods> {
 		public Methods lit(final Integer x) {
-			Methods instance = new Methods() {
-				private Methods selfRef = null;
-				public <B extends Methods> void setSelfRef(B selfRef) {
-					this.selfRef = selfRef;
+			final Methods _instance = new Methods() {
+				private PrMethods prSelfRef = null;
+				public <B extends PrMethods> void setProtectedRef(B selfRef) {
+					this.prSelfRef = selfRef;
 				}
 				public String print(String prefix) {
-					return prefix + new Integer(x).toString() + " [" + selfRef.dynamic() + "] ";
+					return prefix + new Integer(x).toString() + " [" + prSelfRef.dynamic() + "] ";
+				}
+			};
+			PrMethods selfRefInstance = new PrMethods() {
+				public String print(String prefix) {
+					return _instance.print(prefix);
 				}
 				public String dynamic() { return "IntAlg"; }
 			};
-			instance.setSelfRef(instance);
-			return instance;
+			_instance.setProtectedRef(selfRefInstance);
+			return _instance;
 		}
 	}
 	protected static Algebra _algebra;
