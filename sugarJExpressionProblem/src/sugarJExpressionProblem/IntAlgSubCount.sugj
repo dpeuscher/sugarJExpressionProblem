@@ -7,7 +7,11 @@ import sugarJExpressionProblem.IntAlgCount;
 family IntAlgSubCount extends IntAlgSub,IntAlgCount {
 	family class Sub (IntAlgSubCount e1,IntAlgSubCount e2) {
 		public Integer count () {
-			return new Integer(e1.count() + e2.count());
+		    String test = this.print("") + print("") + selfRef.print("");
+		    if (test != null)
+				return new Integer(e1.count() + e2.count());
+			else
+				return new Integer(e1.count() + e2.count());
 		}
 	}
 }

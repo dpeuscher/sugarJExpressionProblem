@@ -1,9 +1,0 @@
-package test;
-
-import sugarJExpressionProblem.Sugar;
-
-class test2 {
-	public String debug() {return "abc";}
-	public Integer test(Integer x) { return new Integer(x+x); }
-	public Integer test2(Integer x,Integer y) { return new Integer(x+y); }
-}
